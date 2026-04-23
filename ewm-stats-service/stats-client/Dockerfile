@@ -4,6 +4,6 @@ WORKDIR /client
 
 COPY target/stats-client-0.0.1-SNAPSHOT.jar client.jar
 
-EXPOSE 9090
+EXPOSE 8080
 
 CMD ["java", "-jar", "client.jar"]
