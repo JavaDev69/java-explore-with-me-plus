@@ -17,8 +17,8 @@ import static org.hamcrest.Matchers.*;
 
 @DataJpaTest
 @Import(StatsService.class)
-public class StatsServiceAppTest
-{
+public class StatsServiceAppTest {
+
     @Autowired
     private StatsRepository statsRepository;
 
@@ -60,7 +60,7 @@ public class StatsServiceAppTest
         ViewStats result = stats.get(0);
         assertThat(result.getApp(), equalTo("app1"));
         assertThat(result.getUri(), equalTo("/event/1"));
-        assertThat(result.getHits(), equalTo(3L)); // все три хита
+        assertThat(result.getHits(), equalTo(3L));
     }
 
     @Test
@@ -99,8 +99,8 @@ public class StatsServiceAppTest
     void shouldReturnEmptyListIfNoHitsInRange() {
         saveHit("app1", "/event/1", "192.168.0.1", BASE_TIME);
         List<ViewStats> stats = statsService.getStats(
-                BASE_TIME.minusMinutes(10),  // start
-                BASE_TIME.minusMinutes(5),  // end — до записи
+                BASE_TIME.minusMinutes(10),
+                BASE_TIME.minusMinutes(5),
                 null,
                 false
         );
