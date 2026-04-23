@@ -22,7 +22,7 @@ services:
       dockerfile: Dockerfile
     container_name: stats-service
     ports:
-      - "9090:9090"
+      - "8080:8080"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/stats_db
       SPRING_DATASOURCE_USERNAME: dbuser
