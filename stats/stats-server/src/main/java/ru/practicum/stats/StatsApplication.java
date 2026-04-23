@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 /**
  * Главный класс приложения для сервиса статистики.
  * Точка входа в приложение.
- *
+ * <p>
  * При запуске:
  * - загружает конфигурацию из application.properties;
  * - сканирует компоненты (@Component, @Service, @Repository, @Controller);

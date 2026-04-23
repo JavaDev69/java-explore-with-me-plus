@@ -47,11 +47,11 @@ public class JacksonConfiguration implements WebMvcConfigurer {
                 try {
                     // Сначала пробуем парсить с пробелом (формат по спецификации)
                     return LocalDateTime.parse(source, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-                    } catch (Exception e) {
-                        throw new IllegalArgumentException(
-                                ("Invalid date format. Expected: 'yyyy-MM-dd HH:mm:ss'. Got: " + source), e);
-                    }
+                } catch (Exception e) {
+                    throw new IllegalArgumentException(
+                            ("Invalid date format. Expected: 'yyyy-MM-dd HH:mm:ss'. Got: " + source), e);
                 }
+            }
         };
 
         registry.addConverter(localDateTimeConverter);

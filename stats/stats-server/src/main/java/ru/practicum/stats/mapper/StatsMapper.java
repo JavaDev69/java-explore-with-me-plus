@@ -1,9 +1,9 @@
 package ru.practicum.stats.mapper;
 
+import org.springframework.stereotype.Component;
 import ru.practicum.stats.dto.EndpointHitDto;
 import ru.practicum.stats.dto.ViewStatsDto;
 import ru.practicum.stats.entity.EndpointHit;
-import org.springframework.stereotype.Component;
 
 @Component
 public class StatsMapper {

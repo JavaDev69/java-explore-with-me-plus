@@ -19,10 +19,26 @@ services:
       POSTGRES_DB: statsdb
       POSTGRES_USER: statsuser
       POSTGRES_PASSWORD: statspass
-    # volumes:
-      #- postgres_data_stats:/var/lib/postgresql/data
     ports:
       - "5433:5432"
+    networks:
+      - app-network
+
+  ewm-service:
+    build: ./main-service
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
+    # depends_on:  # Раскомментируйте, если ewm-service зависит от ewm-db
+    #   - ewm-db
+
+  ewm-db:
+    image: postgres:16.1
+    environment:
+      POSTGRES_DB: ewmdb
+      POSTGRES_USER: ewmuser
+      POSTGRES_PASSWORD: ewmpass
     networks:
       - app-network
 
