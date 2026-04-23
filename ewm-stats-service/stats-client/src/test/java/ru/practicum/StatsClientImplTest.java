@@ -54,14 +54,14 @@ class StatsClientImplTest {
 
         server.expect(requestTo(BASE_URL + "/hit"))
                 .andExpect(method(HttpMethod.POST))
-                .andExpect(content().json("""
-                        {
-                          "app": "test-app",
-                          "uri": "/test",
-                          "ip": "192.168.0.1",
-                          "timestamp": "2026-04-23 10:00:00"
-                        }
-                        """))
+                .andExpect(content().json(
+                        "{\n" +
+                                "  \"app\": \"test-app\",\n" +
+                                "  \"uri\": \"/test\",\n" +
+                                "  \"ip\": \"192.168.0.1\",\n" +
+                                "  \"timestamp\": \"2026-04-23 10:00:00\"\n" +
+                                "}"
+                ))
                 .andRespond(withNoContent());
 
         statsClient.hit(hit);
@@ -80,12 +80,13 @@ class StatsClientImplTest {
                 .andExpect(queryParam("end", equalTo("2026-04-24%2000:00:00")))
                 .andExpect(queryParam("uris", equalTo(String.join(",", uris))))
                 .andExpect(queryParam("unique", equalTo(unique.toString())))
-                .andRespond(withSuccess("""
-                        [
-                          {"app": "test-app", "uri": "/event/1", "hits": 5},
-                          {"app": "test-app", "uri": "/event/2", "hits": 3}
-                        ]
-                        """, MediaType.APPLICATION_JSON));
+                .andRespond(withSuccess(
+                        "[\n" +
+                                "  {\"app\": \"test-app\", \"uri\": \"/event/1\", \"hits\": 5},\n" +
+                                "  {\"app\": \"test-app\", \"uri\": \"/event/2\", \"hits\": 3}\n" +
+                                "]",
+                        MediaType.APPLICATION_JSON
+                ));
 
         List<ViewStats> result = statsClient.getStats(start, end, uris, unique);
 
@@ -102,11 +103,12 @@ class StatsClientImplTest {
                 .andExpect(queryParam("start", equalTo("2026-04-23%2000:00:00")))
                 .andExpect(queryParam("end", equalTo("2026-04-24%2000:00:00")))
                 .andExpect(queryParam("unique", equalTo("false")))
-                .andRespond(withSuccess("""
-                        [
-                          {"app": "test-app", "uri": "/home", "hits": 10}
-                        ]
-                        """, MediaType.APPLICATION_JSON));
+                .andRespond(withSuccess(
+                        "[\n" +
+                                "  {\"app\": \"test-app\", \"uri\": \"/home\", \"hits\": 10}\n" +
+                                "]",
+                        MediaType.APPLICATION_JSON
+                ));
 
         List<ViewStats> result = statsClient.getStats(start, end, null, false);
 
@@ -130,14 +132,14 @@ class StatsClientImplTest {
 
         server.expect(requestTo(BASE_URL + "/hit"))
                 .andExpect(method(HttpMethod.POST))
-                .andExpect(content().json("""
-                        {
-                          "app": "app",
-                          "uri": "/test",
-                          "ip": "127.0.0.1",
-                          "timestamp": "2026-01-01 12:30:45"
-                        }
-                        """))
+                .andExpect(content().json(
+                        "{\n" +
+                                "  \"app\": \"app\",\n" +
+                                "  \"uri\": \"/test\",\n" +
+                                "  \"ip\": \"127.0.0.1\",\n" +
+                                "  \"timestamp\": \"2026-01-01 12:30:45\"\n" +
+                                "}"
+                ))
                 .andRespond(withNoContent());
 
         statsClient.hit(hit);
