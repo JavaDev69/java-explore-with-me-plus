@@ -30,3 +30,14 @@ services:
     depends_on:
       - stats-db
     restart: on-failure
+
+  client-service:
+    build:
+      context: ./ewm-stats-service/stats-client
+      dockerfile: Dockerfile
+    container_name: client-service
+    ports:
+      - "9090:9090"
+    environment:
+      SERVER_PORT: 9090
+      STATS_SERVER_URL: http://localhost:9090
