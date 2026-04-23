@@ -1,14 +1,34 @@
 services:
   stats-server:
+    build: ./stats/stats-server
     ports:
       - "9090:9090"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/statsdb
+      SPRING_DATASOURCE_USERNAME: statsuser
+      SPRING_DATASOURCE_PASSWORD: statspass
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    depends_on:
+      - stats-db
+    networks:
+      - app-network
 
   stats-db:
     image: postgres:16.1
-
-  ewm-service:
+    environment:
+      POSTGRES_DB: statsdb
+      POSTGRES_USER: statsuser
+      POSTGRES_PASSWORD: statspass
+    volumes:
+      - postgres_data_stats:/var/lib/postgresql/data
     ports:
-      - "8080:8080"
+      - "5433:5432"
+    networks:
+      - app-network
 
-  ewm-db:
-    image: postgres:16.1
+volumes:
+  postgres_data_stats:
+
+networks:
+  app-network:
+    driver: bridge
