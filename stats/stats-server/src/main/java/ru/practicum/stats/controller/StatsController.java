@@ -8,18 +8,30 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.stats.service.StatsService;
+import ru.practicum.stats.service.StatsServiceImpl;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
+/**
+ * Контроллер для обработки HTTP‑запросов, связанных со статистикой посещений.
+ * Обрабатывает запросы на сохранение информации о хитах и получение статистики.
+ *
+ * Основные функции:
+ * - приём данных о хите через POST‑запрос и их сохранение;
+ * - предоставление статистики по посещениям через GET‑запрос.
+ *
+ * @see StatsService — сервис для бизнес‑логики работы со статистикой
+ * @see EndpointHitDto — DTO для передачи данных о хите
+ * @see StatsRequestDto — DTO с параметрами запроса статистики
+ * @see ViewStatsDto — DTO для представления статистических данных
+ */
 
 @Slf4j
 @RestController
 @RequestMapping("")
 public class StatsController {
-    private final StatsService statsService;
+    private final StatsServiceImpl statsService;
 
-    public StatsController(StatsService statsService) {
+    public StatsController(StatsServiceImpl statsService) {
         this.statsService = statsService;
     }
 

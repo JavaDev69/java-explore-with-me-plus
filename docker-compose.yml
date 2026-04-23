@@ -19,8 +19,8 @@ services:
       POSTGRES_DB: statsdb
       POSTGRES_USER: statsuser
       POSTGRES_PASSWORD: statspass
-    volumes:
-      - postgres_data_stats:/var/lib/postgresql/data
+    # volumes:
+      #- postgres_data_stats:/var/lib/postgresql/data
     ports:
       - "5433:5432"
     networks:

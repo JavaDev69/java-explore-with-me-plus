@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class StatsRepositoryTest {
 
     @Autowired
-    private StatsRepository repository;
+    private StatsJpaRepository repository;
 
     private LocalDateTime start;
     private LocalDateTime end;

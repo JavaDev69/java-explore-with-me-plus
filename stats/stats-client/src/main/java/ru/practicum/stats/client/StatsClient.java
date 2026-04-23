@@ -2,19 +2,18 @@ package ru.practicum.stats.client;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 import ru.practicum.stats.dto.EndpointHitDto;
 import ru.practicum.stats.dto.StatsRequestDto;
 import ru.practicum.stats.dto.ViewStatsDto;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.web.client.RestTemplate;
+
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @Component
@@ -29,60 +28,118 @@ public class StatsClient {
 
     /**
      * Сохраняет информацию о хите
-     * @param hitDto DTO с данными о запросе
      */
     public void saveHit(EndpointHitDto hitDto) {
+        validateEndpointHitDto(hitDto);
         log.debug("StatsClient: Отправка запроса saveHit на URL: {}/hit", serverUrl);
-        log.debug("StatsClient: Тело запроса: {}", hitDto);
 
-        if (hitDto.getApp() == null || hitDto.getUri() == null ||
-                hitDto.getIp() == null || hitDto.getTimestamp() == null) {
-            throw new IllegalArgumentException("Missing required fields in EndpointHitDto");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<EndpointHitDto> request = new HttpEntity<>(hitDto, headers);
+
+        ResponseEntity<Void> response = restTemplate.postForEntity(serverUrl + "/hit", request, Void.class);
+
+        if (response.getStatusCode() != HttpStatus.CREATED) {
+            throw new RuntimeException("Expected 201 Created, but got: " + response.getStatusCode());
         }
 
-        try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<EndpointHitDto> request = new HttpEntity<>(hitDto, headers);
-            ResponseEntity<Void> response = restTemplate.postForEntity(serverUrl + "/hit", request, Void.class);
-            log.debug("StatsClient: Получен ответ от сервера: статус {}", response.getStatusCode());
-        } catch (Exception e) {
-            log.error("StatsClient: Ошибка при отправке запроса saveHit", e);
-            throw e;
-        }
+        log.debug("StatsClient: Получен ответ от сервера: статус {}", response.getStatusCode());
     }
 
     /**
      * Получает статистику по посещениям
-     * @param requestDto DTO с параметрами запроса
-     * @return список DTO со статистикой
      */
     public List<ViewStatsDto> getStats(StatsRequestDto requestDto) {
-        try {
-            StringBuilder urlBuilder = new StringBuilder(serverUrl + "/stats?"); // ← добавлено /stats
+        validateStatsRequestDto(requestDto);
 
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            String startFormatted = requestDto.getStart().format(formatter);
-            String endFormatted = requestDto.getEnd().format(formatter);
+        String url = buildStatsUrl(requestDto);
+        List<ViewStatsDto> result = restTemplate.getForObject(url, List.class);
 
-            urlBuilder.append("start=").append(encodeParam(startFormatted));
-            urlBuilder.append("&end=").append(encodeParam(endFormatted));
-            urlBuilder.append("&unique=").append(requestDto.isUnique());
+        return Objects.requireNonNullElse(result, List.of());
+    }
 
-            if (requestDto.getUris() != null && !requestDto.getUris().isEmpty()) {
-                for (String uri : requestDto.getUris()) {
-                    urlBuilder.append("&uris=").append(encodeParam(uri));
-                }
-            }
-
-            return restTemplate.getForObject(urlBuilder.toString(), List.class);
-        } catch (Exception e) {
-            throw new RuntimeException("Error fetching statistics", e);
+    private void validateEndpointHitDto(EndpointHitDto hitDto) {
+        if (hitDto == null) {
+            throw new IllegalArgumentException("EndpointHitDto не может быть null");
+        }
+        if (isBlank(hitDto.getApp())) {
+            throw new IllegalArgumentException("Поле 'app' обязательно для заполнения");
+        }
+        if (isBlank(hitDto.getUri())) {
+            throw new IllegalArgumentException("Поле 'uri' обязательно для заполнения");
+        }
+        if (isBlank(hitDto.getIp())) {
+            throw new IllegalArgumentException("Поле 'ip' обязательно для заполнения");
+        }
+        if (hitDto.getTimestamp() == null) {
+            throw new IllegalArgumentException("Поле 'timestamp' обязательно для заполнения");
+        }
+        if (!isValidIpAddress(hitDto.getIp())) {
+            throw new IllegalArgumentException("Некорректный формат IP‑адреса: " + hitDto.getIp());
         }
     }
 
+    private void validateStatsRequestDto(StatsRequestDto requestDto) {
+        if (requestDto == null) {
+            throw new IllegalArgumentException("StatsRequestDto не может быть null");
+        }
+        if (requestDto.getStart() == null) {
+            throw new IllegalArgumentException("Параметр 'start' обязателен для заполнения");
+        }
+        if (requestDto.getEnd() == null) {
+            throw new IllegalArgumentException("Параметр 'end' обязателен для заполнения");
+        }
+        if (requestDto.getStart().isAfter(requestDto.getEnd())) {
+            throw new IllegalArgumentException("Дата 'start' не может быть позже даты 'end'");
+        }
+        if (requestDto.getUris() != null) {
+            for (String uri : requestDto.getUris()) {
+                if (isBlank(uri)) {
+                    throw new IllegalArgumentException("Элементы в списке 'uris' не могут быть пустыми или null");
+                }
+            }
+        }
+    }
+
+    private String buildStatsUrl(StatsRequestDto requestDto) {
+        StringBuilder urlBuilder = new StringBuilder(serverUrl + "/stats?");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        urlBuilder.append("start=").append(encodeParam(requestDto.getStart().format(formatter)));
+        urlBuilder.append("&end=").append(encodeParam(requestDto.getEnd().format(formatter)));
+        urlBuilder.append("&unique=").append(requestDto.isUnique());
+
+        if (requestDto.getUris() != null) {
+            for (String uri : requestDto.getUris()) {
+                if (!isBlank(uri)) {
+                    urlBuilder.append("&uris=").append(encodeParam(uri));
+                }
+            }
+        }
+
+        return urlBuilder.toString();
+    }
+
+    private boolean isValidIpAddress(String ip) {
+        String[] parts = ip.split("\\.");
+        if (parts.length != 4) return false;
+
+        for (String part : parts) {
+            try {
+                int num = Integer.parseInt(part);
+                if (num < 0 || num > 255) return false;
+            } catch (NumberFormatException e) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     protected String encodeParam(String param) {
         return URLEncoder.encode(param, StandardCharsets.UTF_8);
+    }
+
+    private boolean isBlank(String str) {
+        return str == null || str.trim().isEmpty();
     }
 }
