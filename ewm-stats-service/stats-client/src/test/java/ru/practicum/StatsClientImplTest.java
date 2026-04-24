@@ -1,20 +1,19 @@
 package ru.practicum;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.client.RestClientTest;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.test.web.client.RequestMatcher;
+import org.springframework.web.client.RestTemplate;
 import ru.practicum.dto.EndpointHit;
 import ru.practicum.dto.ViewStats;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -23,25 +22,27 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withNoContent;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
-@RestClientTest
-@Import(StatsClientImpl.class)
-@TestPropertySource(properties = {
-        "stats.server.url=http://localhost:8080"
-})
+@ContextConfiguration(classes = StatsClientImplTest.TestConfig.class)
+@TestPropertySource(properties = "stats.server.url=http://localhost:8080")
 class StatsClientImplTest {
 
     @Configuration
     static class TestConfig {
+
     }
 
-    @Autowired
     private StatsClient statsClient;
 
-    @Autowired
     private MockRestServiceServer server;
 
     private static final String BASE_URL = "http://localhost:8080";
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    @BeforeEach
+    void setUp() {
+        RestTemplate restTemplate = new RestTemplate();
+        this.statsClient = new StatsClientImpl(restTemplate, BASE_URL);
+        this.server = MockRestServiceServer.bindTo(restTemplate).build();
+    }
 
     @Test
     void shouldSendHitToServer() {
