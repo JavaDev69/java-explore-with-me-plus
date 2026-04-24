@@ -1,6 +1,7 @@
 package ru.practicum;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,13 +12,10 @@ import ru.practicum.service.StatsService;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@RequiredArgsConstructor
 @RestController
 public class StatsServiceAppController {
     private final StatsService statsService;
-
-    public StatsServiceAppController(StatsService statsService) {
-        this.statsService = statsService;
-    }
 
     @PostMapping("/hit")
     public ResponseEntity<Void> saveHit(@RequestBody @Valid EndpointHit dto) {

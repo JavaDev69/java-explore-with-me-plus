@@ -18,12 +18,7 @@ import java.util.List;
 public class StatsClientImpl implements StatsClient {
 
     private final RestTemplate restTemplate;
-    private final String serverUrl;
-
-    public StatsClientImpl(@Value("${stats.server.url}") String serverUrl, RestTemplateBuilder builder) {
-        this.restTemplate = builder.build();
-        this.serverUrl = serverUrl;
-    }
+    private final @Value("${stats.server.url}") String serverUrl;
 
     @Override
     public void hit(EndpointHit hit) {
