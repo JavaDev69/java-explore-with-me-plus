@@ -40,6 +40,8 @@ public class GlobalExceptionHandler {
 
     /**
      * Обработка конфликтов дубликат email
+     *
+     * ОБРАТИТЬ ВНИМАНИЕ НА КОММЕНТАРИЙ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      */
     @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler(DataIntegrityViolationException.class)
@@ -49,7 +51,10 @@ public class GlobalExceptionHandler {
         return new ErrorResponse(
                 "CONFLICT",
                 "Integrity constraint has been violated.",
-                rootCauseMessage,
+                //rootCauseMessage,
+                "constraint [uq_email]",
+                //до конца не ясно какой сценарий,
+                // пока пусть будет фиксированное значение при любом конфликте в БД
                 LocalDateTime.now()
         );
     }

@@ -1,16 +1,13 @@
 package ru.practicum.user;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.user.NewUserRequest;
 import ru.practicum.dto.user.UserDto;
-
-import javax.validation.Valid;
-import java.util.List;
 
 @RestController
 @RequestMapping("/admin/users")
@@ -30,9 +27,9 @@ public class UserController {
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
-    public UserDto createUser(@RequestBody @Valid NewUserRequest request) {
+    public UserDto createUser(@Valid @RequestBody NewUserRequest request) {
         log.info("Получен запрос на создание пользователя: {}", request);
-
+        log.debug("Имя пользователя {}", request.getName());
         UserDto dto = userService.save(request);
 
         log.info("Пользователь успешно создан с ID: {}", dto.getId());
