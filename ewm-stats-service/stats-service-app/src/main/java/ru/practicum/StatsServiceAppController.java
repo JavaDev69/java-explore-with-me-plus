@@ -12,8 +12,8 @@ import ru.practicum.service.StatsService;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@RequiredArgsConstructor
 @RestController
+@RequiredArgsConstructor
 public class StatsServiceAppController {
     private final StatsService statsService;
 

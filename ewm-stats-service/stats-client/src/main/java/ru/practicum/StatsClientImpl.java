@@ -1,7 +1,6 @@
 package ru.practicum;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.client.RestTemplateBuilder;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -15,10 +14,11 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class StatsClientImpl implements StatsClient {
 
     private final RestTemplate restTemplate;
-    private final @Value("${stats.server.url}") String serverUrl;
+    private final String serverUrl;
 
     @Override
     public void hit(EndpointHit hit) {
