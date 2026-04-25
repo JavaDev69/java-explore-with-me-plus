@@ -1,0 +1,42 @@
+services:
+  stats-db:
+    image: postgres:16.1
+    container_name: stats-db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./volumes/postgres:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=stats_db
+      - POSTGRES_USER=dbuser
+      - POSTGRES_PASSWORD=12345
+    healthcheck:
+      test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
+      timeout: 5s
+      interval: 5s
+      retries: 10
+
+  stats-service:
+    build:
+      context: ./ewm-stats-service/stats-service-app
+      dockerfile: Dockerfile
+    container_name: stats-service
+    ports:
+      - "9090:9090"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/stats_db
+      SPRING_DATASOURCE_USERNAME: dbuser
+      SPRING_DATASOURCE_PASSWORD: 12345
+    depends_on:
+      - stats-db
+    restart: on-failure
+
+  main-service:
+    build:
+      context: ./ewm-main-service/
+      dockerfile: Dockerfile
+    container_name: main-service
+    ports:
+      - "8080:8080"
+    environment:
+      SERVER_PORT: 8080
