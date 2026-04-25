@@ -1,5 +1,6 @@
 package ru.practicum.error;
 
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
@@ -7,6 +8,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import ru.practicum.error.exception.NotFoundException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,7 +22,7 @@ public class GlobalExceptionHandler {
      * Обработка ошибок валидации (400 Bad Request)
      */
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ExceptionHandler({MethodArgumentNotValidException.class})
     public ErrorResponse handleValidationExceptions(MethodArgumentNotValidException ex) {
         List<FieldError> fieldErrors = ex.getBindingResult().getFieldErrors();
         List<String> errorMessages = fieldErrors.stream()
@@ -38,9 +40,30 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleConstraintViolation(ConstraintViolationException ex) {
+        List<String> errorMessages = ex.getConstraintViolations().stream()
+                .map(violation -> String.format(
+                        ("Constraint: %s. Path: %s. Invalid value: %s. Message: %s"),
+                        violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
+                        violation.getPropertyPath().toString(),
+                        violation.getInvalidValue(),
+                        violation.getMessage()
+                ))
+                .collect(Collectors.toList());
+
+        return new ErrorResponse(
+                "BAD_REQUEST",
+                "Incorrectly made request.",
+                String.join("; ", errorMessages),
+                LocalDateTime.now()
+        );
+    }
+
     /**
      * Обработка конфликтов дубликат email
-     *
+     * <p>
      * ОБРАТИТЬ ВНИМАНИЕ НА КОММЕНТАРИЙ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      */
     @ResponseStatus(HttpStatus.CONFLICT)
@@ -55,6 +78,17 @@ public class GlobalExceptionHandler {
                 "constraint [uq_email]",
                 //до конца не ясно какой сценарий,
                 // пока пусть будет фиксированное значение при любом конфликте в БД
+                LocalDateTime.now()
+        );
+    }
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(NotFoundException.class)
+    public ErrorResponse handleNotFoundException(Exception ex) {
+        return new ErrorResponse(
+                "NOT_FOUND",
+                "The required object was not found.",
+                ex.getMessage(),
                 LocalDateTime.now()
         );
     }

@@ -1,6 +1,7 @@
 package ru.practicum.user;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -29,11 +30,19 @@ public class UserController {
     @PostMapping
     public UserDto createUser(@Valid @RequestBody NewUserRequest request) {
         log.info("Получен запрос на создание пользователя: {}", request);
-        log.debug("Имя пользователя {}", request.getName());
+        log.debug("Пользователь {}", request);
         UserDto dto = userService.save(request);
 
         log.info("Пользователь успешно создан с ID: {}", dto.getId());
         return dto;
+    }
+
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("{userId}")
+    public void delete(@PathVariable @Positive Long userId) {
+        log.info("Получен запрос на удаление пользователя с ID: {}", userId);
+        userService.deleteById(userId);
+        log.info("Пользователь с ID {} успешно удалён", userId);
     }
 }
 

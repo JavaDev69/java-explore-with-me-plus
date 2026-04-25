@@ -4,10 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.practicum.dto.user.NewUserRequest;
 import ru.practicum.dto.user.UserDto;
-import ru.practicum.error.ConflictException;
+import ru.practicum.error.exception.NotFoundException;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -28,5 +27,11 @@ public class UserService {
 
         User user = userRepository.save(userMapper.toEntity(request));
         return userMapper.toDto(user);
+    }
+
+    @Transactional
+    public void deleteById(Long id) {
+        if (userRepository.deleteByIdAndReturnRow(id) == 0)
+            throw new NotFoundException("Пользователь с id:"+id+" не существует");
     }
 }
