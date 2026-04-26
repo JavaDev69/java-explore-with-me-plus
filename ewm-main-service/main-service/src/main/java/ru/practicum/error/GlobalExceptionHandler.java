@@ -8,6 +8,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import ru.practicum.error.exception.NotFoundException;
 
 import java.time.LocalDateTime;
@@ -103,6 +104,20 @@ public class GlobalExceptionHandler {
                 "INTERNAL_SERVER_ERROR",
                 "Internal server error.",
                 ex.getMessage(),
+                LocalDateTime.now()
+        );
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        String paramName = ex.getName();
+        String value = ex.getValue() != null ? ex.getValue().toString() : "null";
+
+        return new ErrorResponse(
+                "BAD_REQUEST",
+                "Incorrectly made request.",
+                String.format("Parameter '%s' with value '%s' cannot be converted to required type", paramName, value),
                 LocalDateTime.now()
         );
     }
