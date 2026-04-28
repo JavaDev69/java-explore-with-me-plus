@@ -1,6 +1,8 @@
 package ru.practicum.dto.events;
 
+import lombok.Builder;
 import lombok.Data;
+import ru.practicum.dto.categories.CategoryDto;
 import ru.practicum.dto.user.UserShortDto;
 
 import java.time.LocalDateTime;

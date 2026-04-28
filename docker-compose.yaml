@@ -1,18 +1,20 @@
+version: '3.8'
+
 services:
   stats-server:
     build: ./ewm-stats-service/stats-service-app
     ports:
       - "9090:9090"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/statsdb
-      SPRING_DATASOURCE_USERNAME: statsuser
-      SPRING_DATASOURCE_PASSWORD: statspass
+      SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/stats_db
+      SPRING_DATASOURCE_USERNAME: dbuser
+      SPRING_DATASOURCE_PASSWORD: 12345
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
     depends_on:
       stats-db:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      test: [ "CMD", "curl", "-f", "http://localhost:9090/actuator/health" ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -21,19 +23,21 @@ services:
 
   stats-db:
     image: postgres:16.1
-    environment:
-      POSTGRES_DB: statsdb
-      POSTGRES_USER: statsuser
-      POSTGRES_PASSWORD: statspass
+    container_name: stats-db
+    hostname: stats-db
     ports:
-      - "5433:5432"
+      - "5432:5432"
+    volumes:
+      - ./volumes/postgres-stats:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: stats_db
+      POSTGRES_USER: dbuser
+      POSTGRES_PASSWORD: 12345
     healthcheck:
-      test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
+      test: pg_isready -q -d "$$POSTGRES_DB" -U "$$POSTGRES_USER"
       timeout: 5s
       interval: 5s
       retries: 10
-    #volumes:
-     # - postgres_data_stats:/var/lib/postgresql/data
     networks:
       - app-network
 
@@ -42,10 +46,11 @@ services:
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/ewmdb
-      SPRING_DATASOURCE_USERNAME: ewmuser
-      SPRING_DATASOURCE_PASSWORD: ewmpass
+      SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/ewm_db
+      SPRING_DATASOURCE_USERNAME: dbuser
+      SPRING_DATASOURCE_PASSWORD: 12345
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      STATS_SERVER_URL: http://stats-server:9090
     depends_on:
       ewm-db:
         condition: service_healthy
@@ -59,19 +64,19 @@ services:
 
   ewm-db:
     image: postgres:16.1
+    container_name: ewm-db
+    hostname: ewm-db
     environment:
-      POSTGRES_DB: ewmdb
-      POSTGRES_USER: ewmuser
-      POSTGRES_PASSWORD: ewmpass
+      POSTGRES_DB: ewm_db
+      POSTGRES_USER: dbuser
+      POSTGRES_PASSWORD: 12345
     ports:
       - "5431:5432"
     healthcheck:
-      test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
+      test: pg_isready -q -d "$$POSTGRES_DB" -U "$$POSTGRES_USER"
       timeout: 5s
       interval: 5s
       retries: 10
-    #volumes:
-     # - postgres_data_main:/var/lib/postgresql/data
     networks:
       - app-network
 
@@ -79,6 +84,6 @@ networks:
   app-network:
     driver: bridge
 
-#volumes:
- # postgres_data_stats:
-  #postgres_data_main:
+volumes:
+  postgres-stats:
+  postgres-main:

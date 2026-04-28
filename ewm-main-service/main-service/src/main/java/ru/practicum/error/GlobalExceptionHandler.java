@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import ru.practicum.error.exception.ConflictException;
 import ru.practicum.error.exception.NotFoundException;
 
 import java.time.LocalDateTime;
@@ -79,6 +80,20 @@ public class GlobalExceptionHandler {
                 "constraint [uq_email]",
                 //до конца не ясно какой сценарий,
                 // пока пусть будет фиксированное значение при любом конфликте в БД
+                LocalDateTime.now()
+        );
+    }
+
+    /**
+     * Обработка кастомных конфликтов (например: категория используется)
+     */
+    @ResponseStatus(HttpStatus.CONFLICT)
+    @ExceptionHandler(ConflictException.class)
+    public ErrorResponse handleConflictException(ConflictException ex) {
+        return new ErrorResponse(
+                "CONFLICT",
+                "Conflict occurred.",
+                ex.getMessage(),
                 LocalDateTime.now()
         );
     }

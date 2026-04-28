@@ -11,7 +11,6 @@ CREATE TABLE IF NOT EXISTS categories (
     name VARCHAR(50) NOT NULL UNIQUE
 );
 
--- 3. Таблица событий
 CREATE TABLE IF NOT EXISTS events (
     id BIGSERIAL PRIMARY KEY,
     annotation VARCHAR(2000) NOT NULL,
