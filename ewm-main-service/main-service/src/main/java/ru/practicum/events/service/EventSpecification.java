@@ -2,7 +2,7 @@ package ru.practicum.events.service;
 
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
-import ru.practicum.dto.events.EventState;
+import ru.practicum.events.EventState;
 import ru.practicum.events.Event;
 
 import java.time.LocalDateTime;

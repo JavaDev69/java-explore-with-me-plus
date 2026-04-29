@@ -1,4 +1,4 @@
-package ru.practicum.dto.events;
+package ru.practicum.events;
 
 import lombok.*;
 

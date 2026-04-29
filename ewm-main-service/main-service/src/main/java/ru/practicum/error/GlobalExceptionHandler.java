@@ -3,14 +3,17 @@ package ru.practicum.error;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import ru.practicum.error.exception.ConflictException;
 import ru.practicum.error.exception.EventCreationRuleException;
+import ru.practicum.error.exception.ForbiddenActionException;
 import ru.practicum.error.exception.NotFoundException;
 
 import java.time.LocalDateTime;
@@ -81,10 +84,28 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ExceptionHandler(ForbiddenActionException.class)
+    public ResponseEntity<ErrorResponse> handleForbiddenAction(
+            ForbiddenActionException ex,
+            WebRequest request) {
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                "FORBIDDEN",
+                "For the requested operation the conditions are not met.",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT); // 409 Conflict
+    }
+
     /**
      * Обработка конфликтов дубликат email
      * <p>
+     *
      * ОБРАТИТЬ ВНИМАНИЕ НА КОММЕНТАРИЙ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     *
      */
     @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler(DataIntegrityViolationException.class)

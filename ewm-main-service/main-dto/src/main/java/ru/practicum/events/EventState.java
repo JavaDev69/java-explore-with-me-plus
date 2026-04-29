@@ -1,8 +1,8 @@
-package ru.practicum.dto.events;
+package ru.practicum.events;
 
 public enum EventState {
     PENDING,
     PUBLISHED,
-    CANCELED,
+    CANCELLED,
     CONFIRMED
 }

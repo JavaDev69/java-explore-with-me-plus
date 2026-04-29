@@ -1,4 +1,4 @@
-package ru.practicum.dto.compilation;
+package ru.practicum.compilation;
 
 
 import jakarta.validation.constraints.NotNull;

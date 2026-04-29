@@ -12,7 +12,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.ResultMatcher;
-import ru.practicum.dto.user.NewUserRequest;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

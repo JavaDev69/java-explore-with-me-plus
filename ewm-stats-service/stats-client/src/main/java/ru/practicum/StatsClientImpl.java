@@ -1,15 +1,10 @@
 package ru.practicum;
 
-import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
-import ru.practicum.dto.EndpointHit;
-import ru.practicum.dto.ViewStats;
 
 import java.net.URI;
 import java.time.LocalDateTime;

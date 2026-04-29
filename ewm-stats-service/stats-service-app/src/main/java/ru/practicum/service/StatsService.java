@@ -5,8 +5,8 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.practicum.StatsRepository;
-import ru.practicum.dto.EndpointHit;
-import ru.practicum.dto.ViewStats;
+import ru.practicum.EndpointHit;
+import ru.practicum.ViewStats;
 import ru.practicum.entity.EndpointHitEntity;
 
 import java.time.LocalDateTime;

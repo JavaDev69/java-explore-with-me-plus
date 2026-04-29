@@ -5,8 +5,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.dto.events.dto.EventFullDto;
-import ru.practicum.dto.events.UpdateEventAdminRequest;
+import ru.practicum.events.dto.EventFullDto;
+import ru.practicum.events.dto.UpdateEventAdminRequest;
 import ru.practicum.events.service.EventsService;
 
 import java.time.LocalDateTime;

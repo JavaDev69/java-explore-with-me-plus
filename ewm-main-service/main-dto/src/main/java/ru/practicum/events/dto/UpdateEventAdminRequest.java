@@ -1,10 +1,12 @@
-package ru.practicum.dto.events;
+package ru.practicum.events.dto;
 
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ru.practicum.events.Location;
+import ru.practicum.events.StateAction;
 
 import java.time.LocalDateTime;
 

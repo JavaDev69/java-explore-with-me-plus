@@ -1,9 +1,6 @@
 package ru.practicum.events.service;
 
-import ru.practicum.dto.events.dto.EventFullDto;
-import ru.practicum.dto.events.dto.EventShortDto;
-import ru.practicum.dto.events.UpdateEventAdminRequest;
-import ru.practicum.dto.events.dto.NewEventDto;
+import ru.practicum.events.dto.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -44,4 +41,17 @@ public interface EventsService {
      * @return DTO полного представления сохранённого события
      */
     EventFullDto saveEvent(NewEventDto newEventDto, Long userId);
+
+
+    /**
+     * Обновляет данные события, если оно находится в состоянии «отменено» или «ожидает модерации».
+     *
+     * @param userId ID пользователя, инициирующего обновление
+     * @param eventId ID события, которое требуется обновить
+     * @param updateEventUserRequest DTO с данными для обновления события (поля могут быть null)
+     * @return DTO полного представления обновлённого события
+     * @throws EventNotFoundException если событие с указанным ID не найдено
+     * @throws ForbiddenActionException если обновление запрещено (неверный статус или дата слишком ранняя)
+     */
+    EventFullDto updateInactiveEvent(Long userId, Long eventId, UpdateEventUserRequest updateEventUserRequest);
 }

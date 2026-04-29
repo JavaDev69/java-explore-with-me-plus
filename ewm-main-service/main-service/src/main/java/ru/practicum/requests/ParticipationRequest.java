@@ -2,7 +2,7 @@ package ru.practicum.requests;
 
 import jakarta.persistence.*;
 import lombok.*;
-import ru.practicum.dto.events.EventState;
+import ru.practicum.events.EventState;
 import ru.practicum.events.Event;
 import ru.practicum.user.User;
 

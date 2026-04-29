@@ -1,4 +1,4 @@
-package ru.practicum.dto.categories;
+package ru.practicum.categories;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

@@ -3,7 +3,6 @@ package ru.practicum;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
-import ru.practicum.dto.ViewStats;
 import ru.practicum.entity.EndpointHitEntity;
 
 import java.time.LocalDateTime;
@@ -27,5 +26,5 @@ public interface StatsRepository extends JpaRepository<EndpointHitEntity, Long> 
             "AND (:uris IS NULL OR h.uri IN :uris) " +
             "GROUP BY h.app, h.uri " +
             "ORDER BY COUNT(h) DESC")
-    List<ru.practicum.dto.ViewStats> findAllStats(LocalDateTime start, LocalDateTime end, List<String> uris);
+    List<ViewStats> findAllStats(LocalDateTime start, LocalDateTime end, List<String> uris);
 }

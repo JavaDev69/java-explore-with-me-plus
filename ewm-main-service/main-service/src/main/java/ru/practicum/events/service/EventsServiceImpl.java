@@ -8,27 +8,20 @@ import jakarta.persistence.criteria.Root;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.Hibernate;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.stereotype.Service;
 import ru.practicum.StatsClient;
 import ru.practicum.categories.Category;
 import ru.practicum.categories.CategoryRepository;
-import ru.practicum.dto.ViewStats;
-import ru.practicum.dto.events.dto.EventFullDto;
-import ru.practicum.dto.events.dto.EventShortDto;
-import ru.practicum.dto.events.EventState;
-import ru.practicum.dto.events.UpdateEventAdminRequest;
-import ru.practicum.dto.events.dto.NewEventDto;
+import ru.practicum.ViewStats;
+import ru.practicum.error.exception.ForbiddenActionException;
+import ru.practicum.events.*;
+import ru.practicum.events.dto.*;
 import ru.practicum.error.exception.ConflictException;
 import ru.practicum.error.exception.EventCreationRuleException;
 import ru.practicum.error.exception.NotFoundException;
-import ru.practicum.events.Event;
-import ru.practicum.events.EventsMapper;
-import ru.practicum.events.EventsRepository;
 import ru.practicum.requests.RequestRepository;
 import ru.practicum.user.User;
 import ru.practicum.user.UserRepository;
@@ -72,6 +65,7 @@ public class EventsServiceImpl implements EventsService {
         log.info("Событие успешно сохранено с ID: {} для пользователя с ID: {}", savedEvent.getId(), userId);
         return toEventFullDto(savedEvent);
     }
+
 
 
     @Override
@@ -207,7 +201,7 @@ public class EventsServiceImpl implements EventsService {
                     if (event.getState().equals(EventState.PUBLISHED)) {
                         throw new ConflictException("Cannot reject published event");
                     }
-                    event.setState(EventState.CANCELED);
+                    event.setState(EventState.CANCELLED);
                 }
             }
         }
@@ -382,4 +376,97 @@ public class EventsServiceImpl implements EventsService {
                         r -> ((Number) r[1]).longValue()
                 ));
     }
+
+    @Override
+    @Transactional
+    public EventFullDto updateInactiveEvent(Long userId, Long eventId, UpdateEventUserRequest updateEventUserRequest) {
+        log.info("Начало обновления события с ID: {} для пользователя с ID: {}", eventId, userId);
+
+        // 1. Проверяем поле stateAction — должно быть CANCEL_REVIEW
+        if (updateEventUserRequest.getStateAction() != StateAction.CANCEL_REVIEW) {
+            throw new ForbiddenActionException(
+                    "Поле stateAction должно иметь значение CANCEL_REVIEW. Текущее значение: " +
+                            updateEventUserRequest.getStateAction()
+            );
+        }
+
+        // 2. Проверяем дату ИЗ ЗАПРОСА, если она указана — fail‑fast до обращения к БД
+        LocalDateTime updateDate = updateEventUserRequest.getEventDate();
+        if (updateDate != null) {
+            validateEventDate(updateDate);
+        }
+
+        // 3. Находим событие по ID
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException("Событие с ID " + eventId + " не найдено"));
+
+        // 4. Проверяем принадлежность события пользователю
+        User user = event.getInitiator();
+        if (!user.getId().equals(userId)) {
+            throw new ForbiddenActionException("Пользователь с ID " + userId + " не является инициатором события " + eventId);
+        }
+
+        // 5. Проверяем статус события: разрешены только CANCELLED или PENDING
+        if (!event.getState().equals(EventState.PENDING)) {
+            if (!event.getState().equals(EventState.CANCELLED)) {
+                throw new ForbiddenActionException(
+                        "Нельзя отменить событие с статусом " + event.getState() +
+                                ". Отмена разрешена только для событий в статусе CANCELLED или PENDING."
+                );
+            }
+            event.setState(EventState.PENDING);
+        }
+
+        // 6. Проверяем ДАТУ СОБЫТИЯ: если в запросе даты не было, берём текущую из БД
+        if (updateDate == null) {// берём дату из БД
+            validateEventDate(event.getEventDate()); // валидируем текущую дату события
+        } else {
+            // 7. Если дата указана в запросе, устанавливаем её
+            event.setEventDate(updateDate);
+        }
+
+        // 8. Применяем остальные изменения только для не‑null полей
+        applyNonNullUpdates(event, updateEventUserRequest);
+
+        // 9. Сохраняем изменения в БД
+        Event updatedEvent = eventRepository.save(event);
+        log.info("Событие с ID: {} успешно обновлено", eventId);
+
+        // 10. Конвертируем сущность в DTO для возврата
+        return toEventFullDto(updatedEvent);
+    }
+
+    /**
+     * Применяет к сущности Event только те изменения из UpdateEventUserRequest, которые не равны null.
+     */
+    private void applyNonNullUpdates(Event event, UpdateEventUserRequest request) {
+        if (request.getAnnotation() != null) {
+            event.setAnnotation(request.getAnnotation());
+        }
+        if (request.getCategory() != null) {
+            Category category = findCategoryById(request.getCategory());
+            event.setCategory(category);
+        }
+        if (request.getDescription() != null) {
+            event.setDescription(request.getDescription());
+        }
+        if (request.getLocation() != null) {
+            event.setLocationLat(request.getLocation().getLat());
+            event.setLocationLon(request.getLocation().getLon());
+        }
+        if (request.getPaid() != null) {
+            event.setPaid(request.getPaid());
+        }
+        if (request.getParticipantLimit() != null) {
+            event.setParticipantLimit(request.getParticipantLimit());
+        }
+        if (request.getRequestModeration() != null) {
+            event.setRequestModeration(request.getRequestModeration());
+        }
+        if (request.getTitle() != null) {
+            event.setTitle(request.getTitle());
+        }
+    }
+
+
 }

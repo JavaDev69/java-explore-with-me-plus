@@ -1,4 +1,4 @@
-package ru.practicum.dto;
+package ru.practicum;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;

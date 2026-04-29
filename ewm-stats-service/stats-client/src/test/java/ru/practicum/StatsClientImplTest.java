@@ -10,8 +10,6 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.test.web.client.RequestMatcher;
 import org.springframework.web.client.RestTemplate;
-import ru.practicum.dto.EndpointHit;
-import ru.practicum.dto.ViewStats;
 
 import java.time.LocalDateTime;
 import java.util.List;
