@@ -1,5 +1,6 @@
 package ru.practicum.dto.events.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import ru.practicum.dto.events.Location;
@@ -24,6 +25,7 @@ public class NewEventDto {
     private String description;
 
     @NotNull(message = "Дата и время события не могут быть null")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
 
     @NotNull(message = "Местоположение не может быть null")

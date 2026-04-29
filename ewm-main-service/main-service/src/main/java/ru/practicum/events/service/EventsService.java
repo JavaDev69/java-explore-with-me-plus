@@ -3,6 +3,7 @@ package ru.practicum.events.service;
 import ru.practicum.dto.events.dto.EventFullDto;
 import ru.practicum.dto.events.dto.EventShortDto;
 import ru.practicum.dto.events.UpdateEventAdminRequest;
+import ru.practicum.dto.events.dto.NewEventDto;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -34,4 +35,13 @@ public interface EventsService {
     );
 
     EventFullDto updateEventByAdmin(Long eventId, UpdateEventAdminRequest request);
+
+    /**
+     * Сохраняет новое событие, инициированное пользователем.
+     *
+     * @param newEventDto DTO с данными нового события
+     * @param userId ID пользователя, создающего событие
+     * @return DTO полного представления сохранённого события
+     */
+    EventFullDto saveEvent(NewEventDto newEventDto, Long userId);
 }

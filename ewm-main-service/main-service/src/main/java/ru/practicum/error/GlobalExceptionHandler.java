@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import ru.practicum.error.exception.ConflictException;
+import ru.practicum.error.exception.EventCreationRuleException;
 import ru.practicum.error.exception.NotFoundException;
 
 import java.time.LocalDateTime;
@@ -59,6 +60,23 @@ public class GlobalExceptionHandler {
                 "BAD_REQUEST",
                 "Incorrectly made request.",
                 String.join("; ", errorMessages),
+                LocalDateTime.now()
+        );
+    }
+
+    @ExceptionHandler(EventCreationRuleException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ErrorResponse handleEventCreationRule(EventCreationRuleException ex) {
+        String errorMessage = String.format(
+                ("Field: %s. Error: должно содержать дату, которая ещё не наступила. Value: %s"),
+                ex.getField(),
+                (ex.getRejectedValue() != null) ? ex.getRejectedValue().toString() : "null"
+        );
+
+        return new ErrorResponse(
+                "FORBIDDEN",
+                "For the requested operation the conditions are not met.",
+                errorMessage,
                 LocalDateTime.now()
         );
     }

@@ -1,8 +1,12 @@
 package ru.practicum.events;
 
+import ru.practicum.categories.Category;
+import ru.practicum.dto.events.EventState;
 import ru.practicum.dto.events.dto.EventFullDto;
 import ru.practicum.dto.events.dto.EventShortDto;
 import ru.practicum.dto.events.Location;
+import ru.practicum.dto.events.dto.NewEventDto;
+import ru.practicum.user.User;
 import ru.practicum.user.UserMapper;
 
 import java.time.LocalDateTime;
@@ -48,6 +52,34 @@ public class EventsMapper {
         dto.setViews(event.getViews());
         return dto;
     }
+
+    /**
+     * Преобразует DTO нового события в сущность Event.
+     *
+     * @param dto DTO с данными нового события
+     * @param user пользователь-инициатор события
+     * @return сущность Event, готовая для сохранения в БД
+     */
+    public static Event toEvent(NewEventDto dto, User user, Category category) {
+        return Event.builder()
+                .annotation(dto.getAnnotation())
+                .category(category)
+                .description(dto.getDescription())
+                .title(dto.getTitle())
+                .eventDate(dto.getEventDate())
+                .paid(dto.getPaid())
+                .participantLimit(dto.getParticipantLimit())
+                .requestModeration(dto.getRequestModeration())
+                .locationLat(dto.getLocation().getLat())
+                .locationLon(dto.getLocation().getLon())
+                .createdOn(LocalDateTime.now())
+                .state(EventState.PENDING)
+                .initiator(user)
+                .confirmedRequests(0L)
+                .views(0L)
+                .build();
+    }
+
 
     private static String format(LocalDateTime dateTime) {
         return dateTime != null ? dateTime.format(FORMATTER) : null;

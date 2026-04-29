@@ -8,8 +8,8 @@ import ru.practicum.dto.user.NewUserRequest;
 import ru.practicum.dto.user.UserDto;
 import ru.practicum.error.exception.NotFoundException;
 import ru.practicum.user.User;
-import ru.practicum.user.UserJpaRepository;
 import ru.practicum.user.UserMapper;
+import ru.practicum.user.UserRepository;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,8 +17,8 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class UserServiceJpa implements UserService {
-    private final UserJpaRepository userRepository;
+public class UserServiceImp implements UserService {
+    private final UserRepository userRepository;
     private final UserMapper userMapper;
 
     @Transactional

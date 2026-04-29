@@ -9,7 +9,8 @@ import ru.practicum.StatsClient;
 import ru.practicum.dto.EndpointHit;
 import ru.practicum.dto.events.dto.EventFullDto;
 import ru.practicum.dto.events.dto.EventShortDto;
-import ru.practicum.events.controller.EventsController;
+
+import ru.practicum.events.controller.PublicEventsController;
 import ru.practicum.events.service.EventsService;
 
 import java.time.LocalDateTime;
@@ -21,8 +22,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(EventsController.class)
-public class EventsControllerTest {
+@WebMvcTest(PublicEventsController.class)
+public class PublicEventsControllerTest {
 
     @Autowired
     private MockMvc mockMvc;

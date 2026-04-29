@@ -7,9 +7,12 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.hibernate.Hibernate;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.stereotype.Service;
 import ru.practicum.StatsClient;
 import ru.practicum.categories.Category;
@@ -19,12 +22,16 @@ import ru.practicum.dto.events.dto.EventFullDto;
 import ru.practicum.dto.events.dto.EventShortDto;
 import ru.practicum.dto.events.EventState;
 import ru.practicum.dto.events.UpdateEventAdminRequest;
+import ru.practicum.dto.events.dto.NewEventDto;
 import ru.practicum.error.exception.ConflictException;
+import ru.practicum.error.exception.EventCreationRuleException;
 import ru.practicum.error.exception.NotFoundException;
 import ru.practicum.events.Event;
 import ru.practicum.events.EventsMapper;
 import ru.practicum.events.EventsRepository;
 import ru.practicum.requests.RequestRepository;
+import ru.practicum.user.User;
+import ru.practicum.user.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -33,18 +40,39 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static ru.practicum.events.EventsMapper.toEventFullDto;
-import static ru.practicum.events.EventsMapper.toShortEventDto;
+import static ru.practicum.events.EventsMapper.*;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class EventsServiceImpl implements EventsService {
+    private static final int MIN_HOURS_BEFORE_EVENT = 2;
     private final EventsRepository eventRepository;
     private final CategoryRepository categoryRepository;
     private final RequestRepository requestRepository;
+    private final UserRepository userRepository;
     private final StatsClient statsClient;
     private final EntityManager entityManager;
+
+    @Override
+    public EventFullDto saveEvent(NewEventDto newEventDto, Long userId) {
+        log.info("Начинаем сохранение события для пользователя с ID: {}", userId);
+
+        validateEventDate(newEventDto.getEventDate());
+        User user = findUserById(userId);
+        Category category = findCategoryById(newEventDto.getCategory());
+
+        Event event = toEvent(newEventDto, user, category);
+        Event savedEvent = eventRepository.save(event);
+
+        savedEvent.setInitiator(user);
+        savedEvent.setCategory(category);
+
+        log.info("Событие успешно сохранено с ID: {} для пользователя с ID: {}", savedEvent.getId(), userId);
+        return toEventFullDto(savedEvent);
+    }
+
 
     @Override
     public List<EventShortDto> getPublishedEvents(
@@ -221,6 +249,70 @@ public class EventsServiceImpl implements EventsService {
         setViewsToEvent(saved);
 
         return EventsMapper.toEventFullDto(saved);
+    }
+
+    /**
+     * Валидирует дату события: проверяет, что она не раньше чем через MIN_HOURS_BEFORE_EVENT часов от текущего момента.
+     *
+     * @param eventDate дата события, которую нужно проверить
+     * @throws EventCreationRuleException если дата события раньше минимально допустимой
+     */
+    private void validateEventDate(LocalDateTime eventDate) {
+        LocalDateTime minEventDate = LocalDateTime.now().plusHours(MIN_HOURS_BEFORE_EVENT);
+        if (eventDate.isBefore(minEventDate)) {
+            String message = "Событие не удовлетворяет правилам создания";
+
+            log.warn("Попытка создать событие с датой раньше чем через {} часа. Дата события: {}, минимальная допустимая дата: {}",
+                    MIN_HOURS_BEFORE_EVENT, eventDate, minEventDate);
+
+            throw new EventCreationRuleException(
+                    "eventDate",
+                    eventDate,
+                    message
+            );
+        }
+        log.debug("Дата события прошла валидацию: {}", eventDate);
+    }
+
+    /**
+     * Загружает категорию по ID из DTO и проверяет её существование.
+     * Если категория не найдена, выбрасывает исключение с указанием ID.
+     *
+     * @param categoryId ID категории из NewEventDto
+     * @return найденная сущность Category
+     * @throws EventCreationRuleException если категория с указанным ID не найдена в БД
+     */
+    private Category findCategoryById(Long categoryId) {
+        log.debug("Начинаем загрузку категории с ID: {}", categoryId);
+
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> {
+                    String message = "Категория с ID " + categoryId + " не найдена в базе данных";
+                    log.warn(message);
+                    return new EventCreationRuleException(
+                            "categoryId",
+                            categoryId,
+                            message
+                    );
+                });
+
+        log.debug("Категория успешно загружена: ID {}, название '{}'", category.getId(), category.getName());
+        return category;
+    }
+
+    /**
+     * Находит пользователя по ID или выбрасывает исключение, если пользователь не найден.
+     *
+     * @param userId ID пользователя, которого нужно найти
+     * @return найденный пользователь
+     * @throws NotFoundException если пользователь с указанным ID не найден
+     */
+    private User findUserById(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException(
+                        "Пользователь с ID " + userId + " не найден"));
+        log.debug("Пользователь с ID {} найден: {}", userId, user.getName());
+        return user;
     }
 
     private void setViewsToEvent(Event event) {

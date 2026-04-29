@@ -7,12 +7,13 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Репозиторий для работы с пользователями.
  */
 @Repository
-public interface UserJpaRepository extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<User, Long> {
 
     /**
      * Сохраняет пользователя в базе данных.
@@ -22,6 +23,14 @@ public interface UserJpaRepository extends JpaRepository<User, Long> {
      */
     @Override
     User save(User user);
+
+    /**
+     * Находит пользователя по ID.
+     *
+     * @param userId ID пользователя
+     * @return Optional с найденным пользователем, пустой Optional, если пользователь не найден
+     */
+    Optional<User> findById(Long userId);
 
     /**
      * Удаляет пользователя по ID и возвращает количество удалённых записей.
