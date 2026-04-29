@@ -1,7 +1,11 @@
 package ru.practicum.dto.events;
 
+import lombok.Builder;
 import lombok.Data;
+import ru.practicum.dto.categories.CategoryDto;
 import ru.practicum.dto.user.UserShortDto;
+
+import java.time.LocalDateTime;
 
 @Data
 public class EventFullDto {
@@ -11,7 +15,7 @@ public class EventFullDto {
     private Long confirmedRequests;
     private String createdOn;
     private String description;
-    private String eventDate;
+    private LocalDateTime eventDate;
     private UserShortDto initiator;
     private Location location;
     private Boolean paid;

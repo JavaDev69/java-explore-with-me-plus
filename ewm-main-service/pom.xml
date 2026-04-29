@@ -8,7 +8,6 @@
     </parent>
 
     <artifactId>ewm-main-service</artifactId>
-    <packaging>jar</packaging>
 
     <name>ewm-main-service</name>
     <properties>

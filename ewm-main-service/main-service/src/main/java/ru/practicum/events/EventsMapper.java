@@ -8,6 +8,8 @@ import ru.practicum.user.UserMapper;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import static ru.practicum.categories.CategoryMapper.toCategoryDto;
+
 public class EventsMapper {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -16,7 +18,7 @@ public class EventsMapper {
         EventShortDto dto = new EventShortDto();
         dto.setId(event.getId());
         dto.setAnnotation(event.getAnnotation());
-        dto.setCategory(mapCategoryDto(event.getCategory()));
+        dto.setCategory(toCategoryDto(event.getCategory()));
         dto.setConfirmedRequests(confirmedRequests);
         dto.setEventDate(event.getEventDate());
         dto.setInitiator(new UserMapper().toShortDto(event.getInitiator()));
@@ -30,11 +32,11 @@ public class EventsMapper {
         EventFullDto dto = new EventFullDto();
         dto.setId(event.getId());
         dto.setAnnotation(event.getAnnotation());
-        dto.setCategory(mapCategoryDto(event.getCategory()));
+        dto.setCategory(toCategoryDto(event.getCategory()));
         dto.setConfirmedRequests(event.getConfirmedRequests());
         dto.setCreatedOn(format(event.getCreatedOn()));
         dto.setDescription(event.getDescription());
-        dto.setEventDate(format(event.getEventDate()));
+        dto.setEventDate(event.getEventDate());
         dto.setInitiator(new UserMapper().toShortDto(event.getInitiator()));
         dto.setLocation(new Location(event.getLocationLat(), event.getLocationLon()));
         dto.setPaid(event.getPaid());

@@ -26,7 +26,6 @@ import ru.practicum.events.EventsMapper;
 import ru.practicum.events.EventsRepository;
 import ru.practicum.requests.RequestRepository;
 
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
