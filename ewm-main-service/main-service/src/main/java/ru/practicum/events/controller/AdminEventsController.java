@@ -1,11 +1,11 @@
-package ru.practicum.events;
+package ru.practicum.events.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.dto.events.EventFullDto;
+import ru.practicum.dto.events.dto.EventFullDto;
 import ru.practicum.dto.events.UpdateEventAdminRequest;
 import ru.practicum.events.service.EventsService;
 

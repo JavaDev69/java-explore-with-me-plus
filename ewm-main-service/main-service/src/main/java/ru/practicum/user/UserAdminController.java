@@ -22,7 +22,7 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 @Validated
-public class UserController {
+public class UserAdminController {
 
     private final UserService userService;
 

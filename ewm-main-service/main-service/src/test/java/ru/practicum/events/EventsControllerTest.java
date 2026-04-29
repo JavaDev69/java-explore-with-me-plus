@@ -7,8 +7,9 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.StatsClient;
 import ru.practicum.dto.EndpointHit;
-import ru.practicum.dto.events.EventFullDto;
-import ru.practicum.dto.events.EventShortDto;
+import ru.practicum.dto.events.dto.EventFullDto;
+import ru.practicum.dto.events.dto.EventShortDto;
+import ru.practicum.events.controller.EventsController;
 import ru.practicum.events.service.EventsService;
 
 import java.time.LocalDateTime;

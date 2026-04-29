@@ -1,7 +1,7 @@
 package ru.practicum.events;
 
-import ru.practicum.dto.events.EventFullDto;
-import ru.practicum.dto.events.EventShortDto;
+import ru.practicum.dto.events.dto.EventFullDto;
+import ru.practicum.dto.events.dto.EventShortDto;
 import ru.practicum.dto.events.Location;
 import ru.practicum.user.UserMapper;
 

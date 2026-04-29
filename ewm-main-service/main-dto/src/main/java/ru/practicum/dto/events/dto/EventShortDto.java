@@ -1,6 +1,5 @@
-package ru.practicum.dto.events;
+package ru.practicum.dto.events.dto;
 
-import lombok.Builder;
 import lombok.Data;
 import ru.practicum.dto.categories.CategoryDto;
 import ru.practicum.dto.user.UserShortDto;

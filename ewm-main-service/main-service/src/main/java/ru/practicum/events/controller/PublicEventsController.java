@@ -1,4 +1,4 @@
-package ru.practicum.events;
+package ru.practicum.events.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -7,8 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.StatsClient;
 import ru.practicum.dto.EndpointHit;
-import ru.practicum.dto.events.EventFullDto;
-import ru.practicum.dto.events.EventShortDto;
+import ru.practicum.dto.events.dto.EventFullDto;
+import ru.practicum.dto.events.dto.EventShortDto;
 import ru.practicum.events.service.EventsService;
 
 import java.time.LocalDateTime;
@@ -17,7 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/events")
 @RequiredArgsConstructor
-public class EventsController {
+public class PublicEventsController {
 
     private final EventsService eventService;
     private final StatsClient statsClient;
