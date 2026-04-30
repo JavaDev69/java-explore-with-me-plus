@@ -24,4 +24,5 @@ public interface RequestRepository extends JpaRepository<ParticipationRequest, L
 
     boolean existsByEventIdAndRequesterId(Long eventId, Long requesterId);
 
+    List<ParticipationRequest> findByEventId(Long eventId);
 }

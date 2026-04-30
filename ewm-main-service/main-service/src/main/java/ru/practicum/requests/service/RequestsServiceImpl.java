@@ -106,10 +106,20 @@ public class RequestsServiceImpl implements RequestsService {
                 .build();
     }
 
+    @Override
+    public List<ParticipationRequestDto> getEventRequests(Long userId, Long eventId) {
+        // 1. Проверяем существование события и принадлежность пользователю
+        Event event = eventsRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
 
-    // ВАЖНОЕ ПРИМЕЧАНИЕ: В спецификации в примере ответа (200 OK) заявки в confirmedRequests и rejectedRequests
-// возвращаются со статусом PENDING, что противоречит логике операции.
-// В текущей реализации возвращаем заявки с обновлённым статусом (CONFIRMED/REJECTED),
-// что является корректным поведением. Если требуется строгое соответствие спецификации,
-// замените status в toDto() на EventState.PENDING.
+        if (!event.getInitiator().getId().equals(userId)) {
+            throw new ForbiddenActionException("User is not the initiator of the event");
+        }
+
+        // 2. Получаем все заявки на событие
+        List<ParticipationRequest> requests = requestRepository.findByEventId(eventId);
+
+        // 3. Преобразуем в DTO
+        return RequestsMapper.toDtoList(requests);
+    }
     }

@@ -1,10 +1,11 @@
 package ru.practicum.compilation;
 
-import ru.practicum.dto.compilation.CompilationDto;
+
 import ru.practicum.dto.compilation.NewCompilationDto;
-import ru.practicum.dto.events.dto.EventShortDto;
+
 import ru.practicum.events.Event;
 import ru.practicum.events.EventsMapper;
+import ru.practicum.events.dto.EventShortDto;
 
 import java.util.List;
 import java.util.Map;

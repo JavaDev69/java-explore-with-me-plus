@@ -6,16 +6,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.StatsClient;
-import ru.practicum.compilation.Compilation;
-import ru.practicum.compilation.CompilationMapper;
-import ru.practicum.compilation.CompilationRepository;
+import ru.practicum.compilation.*;
 import ru.practicum.dto.ViewStats;
-import ru.practicum.dto.compilation.CompilationDto;
+
 import ru.practicum.dto.compilation.NewCompilationDto;
-import ru.practicum.dto.compilation.UpdateCompilationRequest;
-import ru.practicum.dto.events.EventState;
 import ru.practicum.error.exception.NotFoundException;
 import ru.practicum.events.Event;
+import ru.practicum.events.EventState;
 import ru.practicum.events.EventsRepository;
 import ru.practicum.requests.RequestRepository;
 

@@ -7,7 +7,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.compilation.controller.PublicCompilationController;
 import ru.practicum.compilation.service.CompilationService;
-import ru.practicum.dto.compilation.CompilationDto;
+
 import ru.practicum.error.exception.NotFoundException;
 
 import java.util.Collections;

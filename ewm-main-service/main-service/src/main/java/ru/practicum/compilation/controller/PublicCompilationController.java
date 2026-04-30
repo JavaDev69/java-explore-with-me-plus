@@ -3,8 +3,9 @@ package ru.practicum.compilation.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.compilation.CompilationDto;
 import ru.practicum.compilation.service.CompilationService;
-import ru.practicum.dto.compilation.CompilationDto;
+
 
 import java.util.List;
 
