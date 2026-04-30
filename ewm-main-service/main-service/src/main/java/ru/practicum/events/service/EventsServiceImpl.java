@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 import ru.practicum.StatsClient;
 import ru.practicum.categories.Category;
 import ru.practicum.categories.CategoryRepository;
-import ru.practicum.ViewStats;
+import ru.practicum.dto.ViewStats;
 import ru.practicum.error.exception.ForbiddenActionException;
 import ru.practicum.events.*;
 import ru.practicum.events.dto.*;
@@ -201,41 +201,12 @@ public class EventsServiceImpl implements EventsService {
                     if (event.getState().equals(EventState.PUBLISHED)) {
                         throw new ConflictException("Cannot reject published event");
                     }
-                    event.setState(EventState.CANCELLED);
+                    event.setState(EventState.CANCELED);
                 }
             }
         }
 
-        if (request.getAnnotation() != null) {
-            event.setAnnotation(request.getAnnotation());
-        }
-        if (request.getDescription() != null) {
-            event.setDescription(request.getDescription());
-        }
-        if (request.getTitle() != null) {
-            event.setTitle(request.getTitle());
-        }
-        if (request.getCategory() != null) {
-            Category category = categoryRepository.findById(request.getCategory())
-                    .orElseThrow(() -> new NotFoundException("Category with id=" + request.getCategory() + " was not found"));
-            event.setCategory(category);
-        }
-        if (request.getLocation() != null) {
-            event.setLocationLat(request.getLocation().getLat());
-            event.setLocationLon(request.getLocation().getLon());
-        }
-        if (request.getPaid() != null) {
-            event.setPaid(request.getPaid());
-        }
-        if (request.getParticipantLimit() != null) {
-            event.setParticipantLimit(request.getParticipantLimit());
-        }
-        if (request.getRequestModeration() != null) {
-            event.setRequestModeration(request.getRequestModeration());
-        }
-        if (request.getEventDate() != null) {
-            event.setEventDate(request.getEventDate());
-        }
+        applyNonNullUpdates(event, request);
 
         Event saved = eventRepository.save(event);
         saved.setConfirmedRequests(requestRepository.countByEventIdAndStatus(saved.getId(), EventState.CONFIRMED));
@@ -381,7 +352,7 @@ public class EventsServiceImpl implements EventsService {
     @Transactional
     public EventFullDto updateInactiveEvent(Long userId, Long eventId, UpdateEventUserRequest updateEventUserRequest) {
         log.info("Начало обновления события с ID: {} для пользователя с ID: {}", eventId, userId);
-
+        log.info("Dto {}", updateEventUserRequest);
         // 1. Проверяем поле stateAction — должно быть CANCEL_REVIEW
         if (updateEventUserRequest.getStateAction() != StateAction.CANCEL_REVIEW) {
             throw new ForbiddenActionException(
@@ -406,53 +377,45 @@ public class EventsServiceImpl implements EventsService {
             throw new ForbiddenActionException("Пользователь с ID " + userId + " не является инициатором события " + eventId);
         }
 
+        log.info("Событие {}", event);
         // 5. Проверяем статус события: разрешены только CANCELLED или PENDING
-        if (!event.getState().equals(EventState.PENDING)) {
-            if (!event.getState().equals(EventState.CANCELLED)) {
+        if (!event.getState().equals(EventState.CANCELED)) {
+            if (!event.getState().equals(EventState.PENDING)) {
                 throw new ForbiddenActionException(
                         "Нельзя отменить событие с статусом " + event.getState() +
                                 ". Отмена разрешена только для событий в статусе CANCELLED или PENDING."
                 );
             }
-            event.setState(EventState.PENDING);
+            log.debug("Статус события {}", event.getState());
+            event.setState(EventState.CANCELED);
         }
 
         // 6. Проверяем ДАТУ СОБЫТИЯ: если в запросе даты не было, берём текущую из БД
-        if (updateDate == null) {// берём дату из БД
-            validateEventDate(event.getEventDate()); // валидируем текущую дату события
-        } else {
-            // 7. Если дата указана в запросе, устанавливаем её
-            event.setEventDate(updateDate);
+        if (updateDate == null) {
+            validateEventDate(event.getEventDate());
         }
 
-        // 8. Применяем остальные изменения только для не‑null полей
         applyNonNullUpdates(event, updateEventUserRequest);
 
-        // 9. Сохраняем изменения в БД
         Event updatedEvent = eventRepository.save(event);
         log.info("Событие с ID: {} успешно обновлено", eventId);
 
-        // 10. Конвертируем сущность в DTO для возврата
         return toEventFullDto(updatedEvent);
     }
 
     /**
-     * Применяет к сущности Event только те изменения из UpdateEventUserRequest, которые не равны null.
+     * Применяет к сущности Event только те изменения из запроса, которые не равны null.
      */
-    private void applyNonNullUpdates(Event event, UpdateEventUserRequest request) {
+    private <T extends UpdateEventRequest> void applyNonNullUpdates(Event event, T request) {
+        // Общие поля для обоих типов запросов
         if (request.getAnnotation() != null) {
             event.setAnnotation(request.getAnnotation());
-        }
-        if (request.getCategory() != null) {
-            Category category = findCategoryById(request.getCategory());
-            event.setCategory(category);
         }
         if (request.getDescription() != null) {
             event.setDescription(request.getDescription());
         }
-        if (request.getLocation() != null) {
-            event.setLocationLat(request.getLocation().getLat());
-            event.setLocationLon(request.getLocation().getLon());
+        if (request.getTitle() != null) {
+            event.setTitle(request.getTitle());
         }
         if (request.getPaid() != null) {
             event.setPaid(request.getPaid());
@@ -463,9 +426,44 @@ public class EventsServiceImpl implements EventsService {
         if (request.getRequestModeration() != null) {
             event.setRequestModeration(request.getRequestModeration());
         }
-        if (request.getTitle() != null) {
-            event.setTitle(request.getTitle());
+        if (request.getLocation() != null) {
+            event.setLocationLat(request.getLocation().getLat());
+            event.setLocationLon(request.getLocation().getLon());
         }
+        if (request.getCategory() != null) {
+            Category category = categoryRepository.findById(request.getCategory())
+                    .orElseThrow(() -> new NotFoundException("Category with id=" + request.getCategory() + " was not found"));
+            event.setCategory(category);
+        }
+        if (request.getEventDate() != null) {
+            event.setEventDate(request.getEventDate());
+        }
+    }
+
+    @Override
+    public List<EventFullDto> getUserEvents(Long userId, int from, int size) {
+        log.debug("Начинаем поиск событий для пользователя с ID: {}, from: {}, size: {}", userId, from, size);
+
+        Pageable pageable = PageRequest.of(from / size, size);
+
+        User user = findUserById(userId);
+        List<Event> events = eventRepository.findAllByInitiatorId(user.getId(), pageable);
+
+        if (events.isEmpty()) {
+            log.debug("Для пользователя с ID {} не найдено событий", userId);
+            return Collections.emptyList();
+        }
+
+        Map<Long, Long> confirmedRequests = getConfirmedRequestsMap(events);
+        setViewsToEvents(events);
+
+        List<EventFullDto> eventFullDtos = events.stream()
+                .peek(event -> event.setConfirmedRequests(confirmedRequests.getOrDefault(event.getId(), 0L)))
+                .map(EventsMapper::toEventFullDto)
+                .collect(Collectors.toList());
+
+        log.debug("Найдено {} событий для пользователя с ID {}", events.size(), userId);
+        return eventFullDtos;
     }
 
 

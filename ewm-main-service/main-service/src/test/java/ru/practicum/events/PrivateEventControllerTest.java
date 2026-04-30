@@ -1,46 +1,61 @@
 package ru.practicum.events;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.annotation.Rollback;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.categories.Category;
 import ru.practicum.categories.CategoryRepository;
-import ru.practicum.events.dto.EventFullDto;
-import ru.practicum.events.dto.NewEventDto;
-import ru.practicum.error.exception.EventCreationRuleException;
-import ru.practicum.error.exception.NotFoundException;
-import ru.practicum.events.service.EventsService;
+import ru.practicum.events.dto.UpdateEventUserRequest;
 import ru.practicum.user.User;
 import ru.practicum.user.UserRepository;
 
 import java.time.LocalDateTime;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.Matchers.containsString;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@AutoConfigureMockMvc
 @Transactional
 @Rollback
 class PrivateEventControllerTest {
 
     @Autowired
-    private EventsService eventsService;
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Autowired
     private UserRepository userRepository;
 
     @Autowired
+    private EventsRepository eventRepository;
+
+    @Autowired
     private CategoryRepository categoryRepository;
 
     private User user;
+    private Event event;
     private Category category;
 
     @BeforeEach
     void setUp() {
+        // Создаём тестовую категорию
+        category = Category.builder()
+                .name("Test Category")
+                .build();
+        category = categoryRepository.save(category);
+
         // Создаём тестового пользователя
         user = User.builder()
                 .name("Test User")
@@ -48,163 +63,211 @@ class PrivateEventControllerTest {
                 .build();
         user = userRepository.save(user);
 
-        // Создаём тестовую категорию
-        category = Category.builder()
-                .name("Test Category")
-                .build();
-        category = categoryRepository.save(category);
-    }
-
-    /**
-     * Проверяет успешное создание события с корректными данными.
-     */
-    @Test
-    void shouldSaveEventSuccessfully() {
-        // Given
-        NewEventDto newEventDto = NewEventDto.builder()
-                .annotation("Test annotation")
-                .category(category.getId())
-                .description("Test description")
-                .eventDate(LocalDateTime.now().plusDays(2))
+        // Создаём тестовое событие в статусе PENDING
+        event = Event.builder()
                 .title("Test Event")
+                .annotation("Test annotation")
+                .description("Test description")
+                .initiator(user)
+                .state(EventState.PENDING)
+                .eventDate(LocalDateTime.now().plusDays(2))
+                .category(category)
                 .paid(false)
                 .participantLimit(10)
                 .requestModeration(true)
-                .location(new Location(55.75f,37.62f))
+                .locationLat(55.75f)
+                .locationLon(37.62f)
+                .confirmedRequests(5L)
+                .createdOn(LocalDateTime.now())
+                .views(0L)
                 .build();
-
-        // When
-        EventFullDto result = eventsService.saveEvent(newEventDto, user.getId());
-
-        // Then
-        assertNotNull(result);
-        assertEquals("Test Event", result.getTitle());
-        assertEquals("Test annotation", result.getAnnotation());
-        assertNotNull(result.getCategory());
-        assertEquals(category.getId(), result.getCategory().getId());
-        assertEquals(category.getName(), result.getCategory().getName());
-        assertEquals(user.getId(), result.getInitiator().getId());
+        event = eventRepository.save(event);
     }
 
     /**
-     * Проверяет обработку ошибки при отсутствии категории в БД.
+     * Проверяет успешное обновление события с корректными данными → 200 OK.
      */
     @Test
-    void shouldThrowExceptionWhenCategoryNotFound() {
+    void shouldUpdateEventSuccessfully() throws Exception {
+        UpdateEventUserRequest request = UpdateEventUserRequest.builder()
+                .annotation("Updated annotation with sufficient length to meet the minimum 20 characters requirement")
+                .title("Updated title that meets the minimum 3 characters requirement")
+                .stateAction(StateAction.CANCEL_REVIEW)
+                .build();
+
+        mockMvc.perform(patch("/users/{userId}/events/{eventId}", user.getId(), event.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(event.getId()))
+                .andExpect(jsonPath("$.title").value("Updated title that meets the minimum 3 characters requirement"))
+                .andExpect(jsonPath("$.annotation").value("Updated annotation with sufficient length to meet the minimum 20 characters requirement"))
+                .andExpect(jsonPath("$.state").value("CANCELED"));
+    }
+
+
+    /**
+     * Проверяет валидацию stateAction: не CANCEL_REVIEW → 403 Forbidden.
+     */
+    @Test
+    void shouldReturnForbiddenWhenStateActionInvalid() throws Exception {
         // Given
-        Long nonExistentCategoryId = 999L;
-        NewEventDto newEventDto = NewEventDto.builder()
-                .annotation("Test annotation")
-                .category(nonExistentCategoryId)
-                .description("Test description")
-                .eventDate(LocalDateTime.now().plusDays(2))
-                .title("Test Event")
-                .paid(false)
-                .participantLimit(10)
-                .requestModeration(true)
+        UpdateEventUserRequest request = UpdateEventUserRequest.builder()
+                .stateAction(StateAction.PUBLISH_EVENT) // Неверный статус
                 .build();
 
         // When & Then
-        EventCreationRuleException exception = assertThrows(
-                EventCreationRuleException.class,
-                () -> eventsService.saveEvent(newEventDto, user.getId())
-        );
-
-        assertTrue(exception.getMessage().contains("Категория с ID " + nonExistentCategoryId + " не найдена"));
-        assertEquals("categoryId", exception.getField());
-        assertEquals(nonExistentCategoryId, exception.getRejectedValue());
+        mockMvc.perform(patch("/users/{userId}/events/{eventId}", user.getId(), event.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict())
+                .andExpect(content().string(containsString("status\":\"FORBIDDEN\",\"reason\":\"For the requested operation the conditions are not met.")));
     }
 
     /**
-     * Проверяет валидацию даты события: ошибка, если дата слишком ранняя.
+     * Проверяет ошибку «событие не найдено» → 404 Not Found.
      */
     @Test
-    void shouldThrowExceptionWhenEventDateTooSoon() {
+    void shouldReturnNotFoundWhenEventDoesNotExist() throws Exception {
         // Given
-        LocalDateTime tooSoonDate = LocalDateTime.now().plusHours(1); // Меньше MIN_HOURS_BEFORE_EVENT
-
-        NewEventDto newEventDto = NewEventDto.builder()
-                .annotation("Test annotation")
-                .category(category.getId())
-                .description("Test description")
-                .eventDate(tooSoonDate)
-                .title("Test Event")
-                .paid(false)
-                .participantLimit(10)
-                .requestModeration(true)
+        UpdateEventUserRequest request = UpdateEventUserRequest.builder()
+                .stateAction(StateAction.CANCEL_REVIEW)
                 .build();
 
         // When & Then
-        EventCreationRuleException exception = assertThrows(
-                EventCreationRuleException.class,
-                () -> eventsService.saveEvent(newEventDto, user.getId())
-        );
-
-        assertTrue(exception.getMessage().contains("Событие не удовлетворяет правилам создания"));
-        assertEquals("eventDate", exception.getField());
-        assertEquals(tooSoonDate, exception.getRejectedValue());
+        mockMvc.perform(patch("/users/{userId}/events/999", user.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string(containsString("ID 999")));
     }
 
     /**
-     * Проверяет обработку ошибки при отсутствии пользователя в БД.
+     * Проверяет ошибку «пользователь не инициатор» → 403 Forbidden.
      */
     @Test
-    void shouldThrowExceptionWhenUserNotFound() {
-        // Given
-        Long nonExistentUserId = 999L;
+    void shouldReturnForbiddenWhenUserIsNotInitiator() throws Exception {
+        // Given: создаём другого пользователя
+        User otherUser = User.builder().name("Other User").email("other@user.com").build();
+        otherUser = userRepository.save(otherUser);
 
-        NewEventDto newEventDto = NewEventDto.builder()
-                .annotation("Test annotation")
-                .category(category.getId())
-                .description("Test description")
-                .eventDate(LocalDateTime.now().plusDays(2))
-                .title("Test Event")
-                .paid(false)
-                .participantLimit(10)
-                .requestModeration(true)
+        UpdateEventUserRequest request = UpdateEventUserRequest.builder()
+                .stateAction(StateAction.CANCEL_REVIEW)
                 .build();
 
         // When & Then
-        NotFoundException exception = assertThrows(
-                NotFoundException.class,
-                () -> eventsService.saveEvent(newEventDto, nonExistentUserId)
-        );
-
-        assertTrue(exception.getMessage().contains("Пользователь с ID " + nonExistentUserId + " не найден"));
+        mockMvc.perform(patch("/users/{userId}/events/{eventId}", otherUser.getId(), event.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict())
+                .andExpect(content().string(containsString("FORBIDDEN\",\"reason\":\"For the requested operation the conditions are not met.")));
     }
 
     /**
-     * Проверяет корректное сохранение всех полей события, включая местоположение.
+     * Проверяет ошибку «статус события не PENDING/CANCELED» → 403 Forbidden.
      */
     @Test
-    void shouldSaveAllEventFieldsCorrectly() {
-        // Given
-        Location locationDto = new Location(55.123456f, 37.987654f);
-        NewEventDto newEventDto = NewEventDto.builder()
-                .annotation("Full test annotation")
-                .category(category.getId())
-                .description("Full test description with all details")
-                .eventDate(LocalDateTime.now().plusDays(5))
-                .title("Full Test Event")
-                .paid(true)
-                .participantLimit(50)
-                .requestModeration(false)
-                .location(locationDto)
+    void shouldReturnForbiddenWhenEventStateInvalid() throws Exception {
+        // Given: обновляем событие до статуса PUBLISHED
+        event.setState(EventState.PUBLISHED);
+        eventRepository.save(event);
+
+        UpdateEventUserRequest request = UpdateEventUserRequest.builder()
+                .stateAction(StateAction.CANCEL_REVIEW)
                 .build();
 
-        // When
-        EventFullDto result = eventsService.saveEvent(newEventDto, user.getId());
+        // When & Then
+        mockMvc.perform(patch("/users/{userId}/events/{eventId}", user.getId(), event.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict())
+                .andExpect(content().string(containsString("status\":\"FORBIDDEN\",\"reason\":\"For the requested operation the conditi")));
+    }
 
-        // Then
-        assertEquals("Full test annotation", result.getAnnotation());
-        assertEquals("Full test description with all details", result.getDescription());
-        assertEquals("Full Test Event", result.getTitle());
-        assertTrue(result.getPaid());
-        assertEquals(50, result.getParticipantLimit());
-        assertFalse(result.getRequestModeration());
-        assertNotNull(result.getLocation());
-        assertEquals(55.123456, result.getLocation().getLat(), 0.000009);
-        assertEquals(37.987654, result.getLocation().getLon(), 0.000009);
+    /**
+     * Проверяет частичное обновление: обновляются только не‑null поля.
+     */
+    @Test
+    void shouldPartiallyUpdateEvent() throws Exception {
+        // Given: только аннотация, остальные поля null
+        UpdateEventUserRequest request = UpdateEventUserRequest.builder()
+                .annotation("Partially updated annotation")
+                .stateAction(StateAction.CANCEL_REVIEW)
+                .build();
+
+        // When & Then
+        mockMvc.perform(patch("/users/{userId}/events/{eventId}", user.getId(), event.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.annotation").value("Partially updated annotation"))
+                // Другие поля не должны измениться
+                .andExpect(jsonPath("$.title").value("Test Event"));
+    }
+
+    /**
+     * Проверяет ошибку при попытке обновить событие с несуществующей категорией.
+     */
+    @Test
+    void shouldReturnNotFoundWhenCategoryDoesNotExist() throws Exception {
+        // Given: указываем несуществующую категорию
+        UpdateEventUserRequest request = UpdateEventUserRequest.builder()
+                .category(999L)
+                .stateAction(StateAction.CANCEL_REVIEW)
+                .build();
+
+        // When & Then
+        mockMvc.perform(patch("/users/{userId}/events/{eventId}", user.getId(), event.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string(containsString("Category with id=999 was not found")));
+    }
+
+    /**
+     * Проверяет обновление местоположения события.
+     */
+    @Test
+    void shouldUpdateEventLocationSuccessfully() throws Exception {
+        // Given
+        Location newLocation = Location.builder()
+                .lat(59.93f)
+                .lon(30.34f)
+                .build();
+
+        UpdateEventUserRequest request = UpdateEventUserRequest.builder()
+                .location(newLocation)
+                .stateAction(StateAction.CANCEL_REVIEW)
+                .build();
+
+        // When & Then
+        mockMvc.perform(patch("/users/{userId}/events/{eventId}", user.getId(), event.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.location.lat").value(59.93f))
+                .andExpect(jsonPath("$.location.lon").value(30.34f));
+    }
+
+    /**
+     * Проверяет, что null‑поля в запросе не перезаписывают существующие значения.
+     */
+    @Test
+    void shouldNotUpdateNullFields() throws Exception {
+        // Given: только stateAction, все остальные поля null
+        UpdateEventUserRequest request = UpdateEventUserRequest.builder()
+                .stateAction(StateAction.CANCEL_REVIEW)
+                .build();
+
+        // When & Then
+        mockMvc.perform(patch("/users/{userId}/events/{eventId}", user.getId(), event.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                // Проверяем, что все исходные значения сохранились
+                .andExpect(jsonPath("$.title").value("Test Event"))
+                .andExpect(jsonPath("$.annotation").value("Test annotation"))
+                .andExpect(jsonPath("$.eventDate").value(Matchers.startsWith(event.getEventDate().toString().substring(0, 19))
+                ));
     }
 }
-

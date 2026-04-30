@@ -54,4 +54,6 @@ public interface EventsService {
      * @throws ForbiddenActionException если обновление запрещено (неверный статус или дата слишком ранняя)
      */
     EventFullDto updateInactiveEvent(Long userId, Long eventId, UpdateEventUserRequest updateEventUserRequest);
+
+    List<EventFullDto> getUserEvents(Long userId, int from, int size);
 }

@@ -9,8 +9,9 @@ import ru.practicum.events.StateAction;
 
 import java.time.LocalDateTime;
 
+@Builder
 @Data
-public class UpdateEventUserRequest {
+public class UpdateEventUserRequest implements UpdateEventRequest{
 
     @Size(min = 20, max = 2000, message = "Аннотация должна быть от 20 до 2000 символов")
     private String annotation;
@@ -20,15 +21,13 @@ public class UpdateEventUserRequest {
     @Size(min = 20, max = 7000, message = "Описание должно быть от 20 до 7000 символов")
     private String description;
 
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
 
     private Location location;
 
     private Boolean paid;
 
-    @Min(value = 0, message = "Лимит участников минимум 0")
-    @Max(value = Integer.MAX_VALUE, message = "Превышен допустимый лимит участников")
+    @Min(value = 0, message = "Participant лимит должен быть >= 0")
     private Integer participantLimit;
 
     private Boolean requestModeration;
