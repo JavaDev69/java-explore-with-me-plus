@@ -4,6 +4,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -45,6 +46,12 @@ public interface EventsRepository extends JpaRepository<Event, Long>, JpaSpecifi
             Pageable pageable
     );
 
-    List<Event> findAllByInitiatorId(Long initiatorId, Pageable pageable);
+    @Query(value = "SELECT * FROM events WHERE initiator_id = :userId " +
+            "ORDER BY event_date DESC LIMIT :size OFFSET :offset",
+            nativeQuery = true)
+    List<Event> findAllByInitiatorIdWithOffset(
+            @Param("userId") Long userId,
+            @Param("offset") int offset,
+            @Param("size") int size);
 }
 

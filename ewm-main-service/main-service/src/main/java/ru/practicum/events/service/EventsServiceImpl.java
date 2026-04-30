@@ -444,10 +444,9 @@ public class EventsServiceImpl implements EventsService {
     public List<EventFullDto> getUserEvents(Long userId, int from, int size) {
         log.debug("Начинаем поиск событий для пользователя с ID: {}, from: {}, size: {}", userId, from, size);
 
-        Pageable pageable = PageRequest.of(from / size, size);
 
         User user = findUserById(userId);
-        List<Event> events = eventRepository.findAllByInitiatorId(user.getId(), pageable);
+        List<Event> events = eventRepository.findAllByInitiatorIdWithOffset(user.getId(), from, size);
 
         if (events.isEmpty()) {
             log.debug("Для пользователя с ID {} не найдено событий", userId);
@@ -455,16 +454,21 @@ public class EventsServiceImpl implements EventsService {
         }
 
         Map<Long, Long> confirmedRequests = getConfirmedRequestsMap(events);
-        setViewsToEvents(events);
+
+        // УБРАЛИ вызов setViewsToEvents(events) — статистика не нужна для этого метода
+
 
         List<EventFullDto> eventFullDtos = events.stream()
-                .peek(event -> event.setConfirmedRequests(confirmedRequests.getOrDefault(event.getId(), 0L)))
+                .peek(event -> event.setConfirmedRequests(
+                        confirmedRequests.getOrDefault(event.getId(), 0L)))
                 .map(EventsMapper::toEventFullDto)
                 .collect(Collectors.toList());
 
         log.debug("Найдено {} событий для пользователя с ID {}", events.size(), userId);
         return eventFullDtos;
     }
+
+
 
 
 }

@@ -20,6 +20,7 @@ import ru.practicum.user.UserRepository;
 import java.time.LocalDateTime;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -270,4 +271,136 @@ class PrivateEventControllerTest {
                 .andExpect(jsonPath("$.eventDate").value(Matchers.startsWith(event.getEventDate().toString().substring(0, 19))
                 ));
     }
+
+    /**
+     * Проверяет успешное получение событий пользователя с пагинацией → 200 OK.
+     */
+    @Test
+    void shouldGetUserEventsWithPagination() throws Exception {
+        // Given: создаём второе событие для того же пользователя
+        Event secondEvent = Event.builder()
+                .title("Second Test Event")
+                .annotation("Second test annotation")
+                .description("Second test description")
+                .initiator(user)
+                .state(EventState.PENDING)
+                .eventDate(LocalDateTime.now().plusDays(3))
+                .category(category)
+                .paid(false)
+                .participantLimit(20) // явно задаём, чтобы избежать ошибки БД
+                .requestModeration(true)
+                .locationLat(55.75f)
+                .locationLon(37.62f)
+                .confirmedRequests(10L)
+                .createdOn(LocalDateTime.now())
+                .views(0L)
+                .build();
+        eventRepository.save(secondEvent);
+
+        // When & Then: запрашиваем события с пагинацией
+        mockMvc.perform(get("/users/{userId}/events", user.getId())
+                        .param("from", "0")
+                        .param("size", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].id").value(secondEvent.getId())) // id=27 (более свежая дата)
+                .andExpect(jsonPath("$[0].title").value("Second Test Event"))
+                .andExpect(jsonPath("$[1].id").value(event.getId()))   // id=26 (более старая дата)
+                .andExpect(jsonPath("$[1].title").value("Test Event"));
+    }
+
+    /**
+     * Проверяет получение пустого списка, если у пользователя нет событий → 200 OK с пустым массивом.
+     */
+    @Test
+    void shouldReturnEmptyListWhenUserHasNoEvents() throws Exception {
+        // Given: создаём пользователя без событий
+        User userWithoutEvents = User.builder()
+                .name("User Without Events")
+                .email("noevents@user.com")
+                .build();
+        userRepository.save(userWithoutEvents);
+
+        // When & Then
+        mockMvc.perform(get("/users/{userId}/events", userWithoutEvents.getId())
+                        .param("from", "0")
+                        .param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[]")); // пустой массив
+    }
+
+    /**
+     * Проверяет валидацию параметра 'from': отрицательное значение → 400 Bad Request.
+     */
+    @Test
+    void shouldReturnBadRequestWhenFromIsNegative() throws Exception {
+        // When & Then
+        mockMvc.perform(get("/users/{userId}/events", user.getId())
+                        .param("from", "-1")
+                        .param("size", "10"))
+                .andExpect(status().isBadRequest());
+    }
+
+    /**
+     * Проверяет валидацию параметра 'size': ноль или отрицательное значение → 400 Bad Request.
+     */
+    @Test
+    void shouldReturnBadRequestWhenSizeIsInvalid() throws Exception {
+        // When & Then: size = 0
+        mockMvc.perform(get("/users/{userId}/events", user.getId())
+                        .param("from", "0")
+                        .param("size", "0"))
+                .andExpect(status().isBadRequest());
+
+        // When & Then: size = -5
+        mockMvc.perform(get("/users/{userId}/events", user.getId())
+                        .param("from", "0")
+                        .param("size", "-5"))
+                .andExpect(status().isBadRequest());
+    }
+
+    /**
+     * Проверяет использование значений по умолчанию для пагинации:
+     * - без параметров from/size → 200 OK, возвращает 10 записей (size=10 по умолчанию);
+     * - с параметрами from=0, size=10 → 200 OK, возвращает 10 записей.
+     */
+    @Test
+    void shouldUseDefaultPaginationValues() throws Exception {
+        // Given: создаём валидные события для проверки пагинации
+        for (int i = 0; i < 15; i++) {
+            Event additionalEvent = Event.builder()
+                    .title("Event " + i)
+                    .annotation("Annotation " + i)
+                    .initiator(user)
+                    .state(EventState.PENDING)
+                    .eventDate(LocalDateTime.now().plusDays(i + 4))
+                    .category(category)
+                    .paid(false)
+                    .participantLimit(10)
+                    // Обязательные поля, которые были пропущены:
+                    .createdOn(LocalDateTime.now())  // добавлено: createdOn
+                    .requestModeration(true)        // добавлено: requestModeration
+                    .confirmedRequests(0L)       // добавлено: confirmedRequests
+                    .views(0L)                   // добавлено: views
+                    .build();
+            eventRepository.save(additionalEvent);
+        }
+
+        // When & Then: запрос без параметров (используются значения по умолчанию)
+        mockMvc.perform(get("/users/{userId}/events", user.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(10)); // по умолчанию size=10
+
+        // When & Then: запрос с явными параметрами пагинации
+        mockMvc.perform(get("/users/{userId}/events",user.getId())
+                        .param("from", "0")
+                        .param("size", "10")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(10))
+                .andExpect(jsonPath("$[0].title").value("Event 14")) // самая свежая запись
+                .andExpect(jsonPath("$[9].title").value("Event 5"));  // 10‑я запись
+    }
+
+
 }
