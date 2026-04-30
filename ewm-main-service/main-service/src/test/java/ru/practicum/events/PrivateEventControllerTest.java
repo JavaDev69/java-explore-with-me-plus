@@ -402,5 +402,95 @@ class PrivateEventControllerTest {
                 .andExpect(jsonPath("$[9].title").value("Event 5"));  // 10‑я запись
     }
 
+    /**
+     * Проверяет ошибку «пользователь не инициатор события» → 403 Forbidden.
+     */
+    @Test
+    void shouldReturnForbiddenWhenUserIsNotEventInitiator() throws Exception {
+        // Given: создаём другого пользователя и событие для него
+        User otherUser = User.builder()
+                .name("Other User")
+                .email("other@user.com")
+                .build();
+        otherUser = userRepository.save(otherUser);
+
+        Event otherEvent = Event.builder()
+                .title("Other User's Event")
+                .annotation("Annotation for other user")
+                .description("Description for other user's event")
+                .initiator(otherUser)
+                .state(EventState.PENDING)
+                .eventDate(LocalDateTime.now().plusDays(5))
+                .category(category)
+                .paid(false)
+                .participantLimit(15)
+                .requestModeration(true)
+                .locationLat(59.93f)
+                .locationLon(30.34f)
+                .confirmedRequests(3L)
+                .createdOn(LocalDateTime.now())
+                .views(0L)
+                .build();
+        eventRepository.save(otherEvent);
+
+        // When & Then: пытаемся получить событие другого пользователя
+        mockMvc.perform(get("/users/{userId}/events/{eventId}", user.getId(), otherEvent.getId()))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value("FORBIDDEN"))
+                .andExpect(jsonPath("$.reason").value("For the requested operation the conditions are not met."))
+                // Вариант 1: проверяем, что сообщение содержит подстроку (через matches)
+                .andExpect(jsonPath("$.message").value(Matchers.containsString("не является инициатором")));
+    }
+
+
+    /**
+     * Проверяет валидацию параметра userId: некорректный формат → 400 Bad Request.
+     */
+    @Test
+    void shouldReturnBadRequestWhenUserIdIsInvalid() throws Exception {
+        // When & Then: передаём строку вместо числа
+        mockMvc.perform(get("/users/invalidUserId/events/1"))
+                .andExpect(status().isBadRequest());
+    }
+
+    /**
+     * Проверяет валидацию параметра eventId: некорректный формат → 400 Bad Request.
+     */
+    @Test
+    void shouldReturnBadRequestWhenEventIdIsInvalid() throws Exception {
+        // When & Then: передаём строку вместо числа
+        mockMvc.perform(get("/users/1/events/invalidEventId"))
+                .andExpect(status().isBadRequest());
+    }
+
+    /**
+     * Проверяет получение события в статусе CANCELED.
+     */
+    @Test
+    void shouldGetCancelledEvent() throws Exception {
+        // Given: отменяем событие
+        event.setState(EventState.CANCELED);
+        eventRepository.save(event);
+
+        // When & Then
+        mockMvc.perform(get("/users/{userId}/events/{eventId}", user.getId(), event.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.state").value("CANCELED"));
+    }
+
+    /**
+     * Проверяет получение события с нулевым количеством подтверждённых заявок.
+     */
+    @Test
+    void shouldGetEventWithZeroConfirmedRequests() throws Exception {
+        // Given: сбрасываем подтверждённые заявки
+        event.setConfirmedRequests(0L);
+        eventRepository.save(event);
+
+        // When & Then
+        mockMvc.perform(get("/users/{userId}/events/{eventId}", user.getId(), event.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.confirmedRequests").value(0));
+    }
 
 }

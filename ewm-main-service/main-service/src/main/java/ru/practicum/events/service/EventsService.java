@@ -56,4 +56,7 @@ public interface EventsService {
     EventFullDto updateInactiveEvent(Long userId, Long eventId, UpdateEventUserRequest updateEventUserRequest);
 
     List<EventFullDto> getUserEvents(Long userId, int from, int size);
+
+    EventFullDto getUserEventById(Long userId, Long eventId);
+
 }

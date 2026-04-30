@@ -468,6 +468,35 @@ public class EventsServiceImpl implements EventsService {
         return eventFullDtos;
     }
 
+    @Override
+    public EventFullDto getUserEventById(Long userId, Long eventId) {
+        log.debug("Начинаем поиск события с ID: {} для пользователя с ID: {}", eventId, userId);
+
+        // Находим пользователя — если не найден, будет выброшено исключение NotFoundException
+        User user = findUserById(userId);
+
+        // Ищем событие по ID и проверяем принадлежность пользователю
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
+
+        if (!event.getInitiator().getId().equals(userId)) {
+            throw new ForbiddenActionException(
+                    "Пользователь с ID " + userId + " не является инициатором события " + eventId
+            );
+        }
+
+        log.debug("Событие найдено в БД: ID {}, заголовок '{}'", event.getId(), event.getTitle());
+
+        // Получаем количество подтверждённых заявок
+        long confirmedRequests = requestRepository.countByEventIdAndStatus(event.getId(), EventState.CONFIRMED);
+        event.setConfirmedRequests(confirmedRequests);
+
+        // Обновляем просмотры
+        setViewsToEvent(event);
+
+        log.debug("Полные данные события подготовлены для возврата");
+        return toEventFullDto(event);
+    }
 
 
 

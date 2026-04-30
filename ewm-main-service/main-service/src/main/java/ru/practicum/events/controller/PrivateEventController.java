@@ -72,4 +72,20 @@ public class PrivateEventController {
         return userEvents;
     }
 
+    @GetMapping("/{eventId}")
+    @ResponseStatus(HttpStatus.OK)
+    public EventFullDto getUserEventById(
+            @PathVariable @Positive Long userId,
+            @PathVariable @Positive Long eventId) {
+
+
+        log.info("Получен запрос на получение события с ID: {} для пользователя с ID: {}", eventId, userId);
+
+        EventFullDto event = eventsService.getUserEventById(userId, eventId);
+
+        log.info("Событие с ID: {} успешно найдено для пользователя с ID: {}", eventId, userId);
+        log.debug("Полные данные найденного события: {}", event);
+
+        return event;
+    }
 }
