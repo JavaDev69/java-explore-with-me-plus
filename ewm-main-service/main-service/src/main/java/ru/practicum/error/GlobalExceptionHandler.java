@@ -145,7 +145,7 @@ public class GlobalExceptionHandler {
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(NotFoundException.class)
-    public ErrorResponse handleNotFoundException(Exception ex) {
+    public ErrorResponse handleNotFoundException(NotFoundException ex) {
         return new ErrorResponse(
                 "NOT_FOUND",
                 "The required object was not found.",
