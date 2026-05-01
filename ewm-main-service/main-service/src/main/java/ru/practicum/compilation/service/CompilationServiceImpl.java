@@ -8,7 +8,6 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.StatsClient;
 import ru.practicum.compilation.*;
 import ru.practicum.dto.ViewStats;
-import ru.practicum.dto.compilation.NewCompilationDto;
 import ru.practicum.error.exception.NotFoundException;
 import ru.practicum.events.Event;
 import ru.practicum.events.EventState;
