@@ -305,4 +305,126 @@ class ParticipationsRequestsServiceTest {
         verify(requestRepository, times(1)).save(any(ParticipationRequest.class));
     }
 
+    @Test
+    void cancelParticipationRequest_Success() {
+        // Given
+        Long userId = 1L;
+        Long requestId = 1000L;
+
+        User requester = new User();
+        requester.setId(userId);
+
+        Event event = new Event();
+        event.setId(200L);
+
+        ParticipationRequest request = new ParticipationRequest();
+        request.setId(requestId);
+        request.setRequester(requester);
+        request.setEvent(event); // Связываем с событием
+        request.setStatus(EventState.PENDING);
+
+        when(requestRepository.findById(requestId)).thenReturn(Optional.of(request));
+
+        ParticipationRequest savedRequest = new ParticipationRequest();
+        savedRequest.setId(requestId);
+        savedRequest.setStatus(EventState.CANCELED);
+        savedRequest.setEvent(event); // ВАЖНО: связываем сохранённый запрос с событием
+        savedRequest.setRequester(requester); // Дополнительно: сохраняем связь с пользователем
+        when(requestRepository.save(any(ParticipationRequest.class))).thenReturn(savedRequest);
+
+        // When
+        ParticipationRequestDto result = participationsRequestsService.cancelParticipationRequest(userId, requestId);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(EventState.CANCELED, result.getStatus());
+        verify(requestRepository, times(1)).save(any(ParticipationRequest.class));
+    }
+
+
+    @Test
+    void cancelParticipationRequest_RequestNotFound_ThrowsNotFoundException() {
+        // Given
+        Long userId = 1L;
+        Long requestId = 999L;
+
+        when(requestRepository.findById(requestId)).thenReturn(Optional.empty());
+
+        // When & Then
+        NotFoundException exception = assertThrows(NotFoundException.class,
+                () -> participationsRequestsService.cancelParticipationRequest(userId, requestId));
+
+        assertTrue(exception.getMessage().contains("Request with id=" + requestId + " was not found"));
+    }
+
+    @Test
+    void cancelParticipationRequest_WrongUser_ThrowsNotFoundException() {
+        // Given
+        Long userId = 1L;
+        Long otherUserId = 2L;
+        Long requestId = 1000L;
+
+        User otherUser = new User();
+        otherUser.setId(otherUserId);
+
+        ParticipationRequest request = new ParticipationRequest();
+        request.setId(requestId);
+        request.setRequester(otherUser);
+        request.setStatus(EventState.PENDING);
+
+        when(requestRepository.findById(requestId)).thenReturn(Optional.of(request));
+
+        // When & Then
+        NotFoundException exception = assertThrows(NotFoundException.class,
+                () -> participationsRequestsService.cancelParticipationRequest(userId, requestId));
+
+        assertTrue(exception.getMessage().contains("is not accessible for user " + userId));
+    }
+
+    @Test
+    void cancelParticipationRequest_AlreadyConfirmed_ThrowsIllegalArgumentException() {
+        // Given
+        Long userId = 1L;
+        Long requestId = 1000L;
+
+        User requester = new User();
+        requester.setId(userId);
+
+        ParticipationRequest request = new ParticipationRequest();
+        request.setId(requestId);
+        request.setRequester(requester);
+        request.setStatus(EventState.CONFIRMED);
+
+        when(requestRepository.findById(requestId)).thenReturn(Optional.of(request));
+
+        // When & Then
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> participationsRequestsService.cancelParticipationRequest(userId, requestId));
+
+        assertTrue(exception.getMessage().contains("Cannot cancel request with status: " + EventState.CONFIRMED));
+    }
+
+    @Test
+    void cancelParticipationRequest_AlreadyCancelled_ThrowsIllegalArgumentException() {
+        // Given
+        Long userId = 1L;
+        Long requestId = 1000L;
+
+        User requester = new User();
+        requester.setId(userId);
+
+        ParticipationRequest request = new ParticipationRequest();
+        request.setId(requestId);
+        request.setRequester(requester);
+        request.setStatus(EventState.CANCELED);
+
+        when(requestRepository.findById(requestId)).thenReturn(Optional.of(request));
+
+        // When & Then
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> participationsRequestsService.cancelParticipationRequest(userId, requestId));
+
+        assertTrue(exception.getMessage().contains("Cannot cancel request with status: " + EventState.CANCELED));
+    }
+
 }

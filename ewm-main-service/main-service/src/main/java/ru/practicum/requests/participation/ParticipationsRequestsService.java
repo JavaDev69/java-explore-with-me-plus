@@ -13,6 +13,7 @@ import ru.practicum.events.EventsRepository;
 import ru.practicum.request.ParticipationRequestDto;
 import ru.practicum.requests.ParticipationRequest;
 import ru.practicum.requests.RequestRepository;
+import ru.practicum.requests.RequestsMapper;
 import ru.practicum.user.User;
 import ru.practicum.user.UserRepository;
 
@@ -84,4 +85,28 @@ public class ParticipationsRequestsService {
         return toDto(savedRequest);
     }
 
+    @Transactional
+    public ParticipationRequestDto cancelParticipationRequest(Long userId, Long requestId) {
+        // 1. Проверяем существование запроса
+        ParticipationRequest request = requestRepository.findById(requestId)
+                .orElseThrow(() -> new NotFoundException("Request with id=" + requestId + " was not found"));
+
+        // 2. Проверяем, что запрос принадлежит пользователю
+        if (!request.getRequester().getId().equals(userId)) {
+            throw new NotFoundException("Request with id=" + requestId + " is not accessible for user " + userId);
+        }
+
+        // 3. Проверяем статус запроса — можно отменять только PENDING
+        if (!EventState.PENDING.equals(request.getStatus())) {
+            throw new IllegalArgumentException("Cannot cancel request with status: " + request.getStatus());
+        }
+
+        // 4. Обновляем статус на CANCELLED
+        request.setStatus(EventState.CANCELED);
+
+        ParticipationRequest savedRequest = requestRepository.save(request);
+        log.info("Заявка на участие с ID: {} отменена пользователем: {}", requestId, userId);
+
+        return toDto(savedRequest);
+    }
 }

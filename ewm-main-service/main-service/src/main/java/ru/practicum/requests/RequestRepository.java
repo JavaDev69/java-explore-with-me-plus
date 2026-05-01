@@ -30,4 +30,6 @@ public interface RequestRepository extends JpaRepository<ParticipationRequest, L
     List<ParticipationRequest> findByRequesterId(Long requesterId);
 
     Optional<ParticipationRequest> findByIdAndRequesterId(Long requestId, Long requesterId);
+
+    Optional<ParticipationRequest> findById(Long id);
 }

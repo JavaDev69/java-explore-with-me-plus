@@ -27,5 +27,15 @@ public class PrivateParticipationRequestController {
         log.info("Заявка успешно создана с ID: {} для пользователя {} на событие {}", createdRequest.getId(), userId, eventId);
         return createdRequest;
     }
+
+    @PatchMapping("/{requestId}/cancel")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ParticipationRequestDto cancelParticipationRequest(
+            @PathVariable Long userId,
+            @PathVariable Long requestId) {
+
+        ParticipationRequestDto cancelledRequest = participationsRequestsService.cancelParticipationRequest(userId, requestId);
+        return cancelledRequest;
+    }
 }
 
