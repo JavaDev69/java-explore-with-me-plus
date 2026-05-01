@@ -41,4 +41,5 @@ public class CompilationMapper {
                 .events(shortEvents)
                 .build();
     }
+
 }
