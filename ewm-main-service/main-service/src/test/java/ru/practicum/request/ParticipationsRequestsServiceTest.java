@@ -18,6 +18,9 @@ import ru.practicum.user.User;
 import ru.practicum.user.UserRepository;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -425,6 +428,92 @@ class ParticipationsRequestsServiceTest {
                 () -> participationsRequestsService.cancelParticipationRequest(userId, requestId));
 
         assertTrue(exception.getMessage().contains("Cannot cancel request with status: " + EventState.CANCELED));
+    }
+
+    @Test
+    void getUserParticipationRequests_Success_EmptyList() {
+        // Given
+        Long userId = 1L;
+
+        User user = new User();
+        user.setId(userId);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(requestRepository.findByRequesterId(userId)).thenReturn(Collections.emptyList());
+
+        // When
+        List<ParticipationRequestDto> result = participationsRequestsService.getUserParticipationRequests(userId);
+
+        // Then
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(userRepository, times(1)).findById(userId);
+        verify(requestRepository, times(1)).findByRequesterId(userId);
+    }
+
+    @Test
+    void getUserParticipationRequests_Success_WithRequests() {
+        // Given
+        Long userId = 1L;
+
+        User user = new User();
+        user.setId(userId);
+
+        Event event1 = new Event();
+        event1.setId(100L);
+
+        Event event2 = new Event();
+        event2.setId(200L);
+
+        ParticipationRequest request1 = new ParticipationRequest();
+        request1.setId(1000L);
+        request1.setRequester(user);
+        request1.setEvent(event1);
+        request1.setStatus(EventState.PENDING);
+        request1.setCreated(LocalDateTime.now().minusDays(1));
+
+        ParticipationRequest request2 = new ParticipationRequest();
+        request2.setId(1001L);
+        request2.setRequester(user);
+        request2.setEvent(event2);
+        request2.setStatus(EventState.CONFIRMED);
+        request2.setCreated(LocalDateTime.now());
+
+        List<ParticipationRequest> requests = Arrays.asList(request1, request2);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(requestRepository.findByRequesterId(userId)).thenReturn(requests);
+
+        // When
+        List<ParticipationRequestDto> result = participationsRequestsService.getUserParticipationRequests(userId);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(2, result.size());
+
+        ParticipationRequestDto dto1 = result.get(0);
+        assertEquals(1000L, dto1.getId());
+        assertEquals(EventState.PENDING, dto1.getStatus());
+        assertEquals(100L, dto1.getEvent());
+
+        ParticipationRequestDto dto2 = result.get(1);
+        assertEquals(1001L, dto2.getId());
+        assertEquals(EventState.CONFIRMED, dto2.getStatus());
+        assertEquals(200L, dto2.getEvent());
+    }
+
+    @Test
+    void getUserParticipationRequests_UserNotFound_ThrowsNotFoundException() {
+        // Given
+        Long userId = 999L;
+
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        // When & Then
+        NotFoundException exception = assertThrows(NotFoundException.class,
+                () -> participationsRequestsService.getUserParticipationRequests(userId));
+
+        assertTrue(exception.getMessage().contains("User with id=" + userId));
     }
 
 }

@@ -18,6 +18,8 @@ import ru.practicum.user.User;
 import ru.practicum.user.UserRepository;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static ru.practicum.requests.RequestsMapper.toDto;
 
@@ -109,4 +111,19 @@ public class ParticipationsRequestsService {
 
         return toDto(savedRequest);
     }
+
+    public List<ParticipationRequestDto> getUserParticipationRequests(Long userId) {
+        // 1. Проверяем существование пользователя
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User with id=" + userId + " was not found"));
+
+        // 2. Получаем все заявки пользователя
+        List<ParticipationRequest> requests = requestRepository.findByRequesterId(userId);
+
+        // 3. Преобразуем в DTO
+        return requests.stream()
+                .map(RequestsMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
 }
