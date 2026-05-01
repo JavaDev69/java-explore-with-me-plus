@@ -10,7 +10,6 @@ import ru.practicum.error.exception.ForbiddenActionException;
 import ru.practicum.error.exception.NotFoundException;
 import ru.practicum.events.Event;
 import ru.practicum.events.EventState;
-
 import ru.practicum.events.EventsRepository;
 import ru.practicum.request.EventRequestStatusUpdateRequest;
 import ru.practicum.request.EventRequestStatusUpdateResult;
@@ -18,14 +17,10 @@ import ru.practicum.request.ParticipationRequestDto;
 import ru.practicum.requests.ParticipationRequest;
 import ru.practicum.requests.RequestRepository;
 import ru.practicum.requests.RequestsMapper;
-import ru.practicum.user.User;
 import ru.practicum.user.UserRepository;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-
-import static ru.practicum.requests.RequestsMapper.toDtoList;
 
 @Service
 @RequiredArgsConstructor
@@ -122,4 +117,4 @@ public class RequestsServiceImpl implements RequestsService {
         // 3. Преобразуем в DTO
         return RequestsMapper.toDtoList(requests);
     }
-    }
+}

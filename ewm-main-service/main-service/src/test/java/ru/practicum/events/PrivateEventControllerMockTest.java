@@ -48,8 +48,8 @@ class PrivateEventControllerMockTest {
     @MockBean
     private RequestRepository requestRepository;
 
-    private final Long TEST_USER_ID = 1L;
-    private final Long TEST_EVENT_ID = 2L;
+    private static final Long TEST_USER_ID = 1L;
+    private static final Long TEST_EVENT_ID = 2L;
 
     @Test
     void shouldGetUserEventByIdSuccessfully() throws Exception {

@@ -7,6 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.request.ParticipationRequestDto;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/users/{userId}/requests")
 @RequiredArgsConstructor
@@ -16,7 +18,7 @@ public class PrivateParticipationRequestController {
     private final ParticipationsRequestsService participationsRequestsService;
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
+    @ResponseStatus(HttpStatus.OK)
     public ParticipationRequestDto createParticipationRequest(
             @PathVariable @Positive Long userId,
             @RequestParam @Positive Long eventId) {
@@ -37,5 +39,18 @@ public class PrivateParticipationRequestController {
         ParticipationRequestDto cancelledRequest = participationsRequestsService.cancelParticipationRequest(userId, requestId);
         return cancelledRequest;
     }
+
+    @GetMapping
+    @ResponseStatus(HttpStatus.OK)
+    public List<ParticipationRequestDto> getUserParticipationRequests(
+            @PathVariable @Positive Long userId) {
+        log.info("Получен запрос на получение заявок пользователя с ID: {}", userId);
+
+        List<ParticipationRequestDto> requests = participationsRequestsService.getUserParticipationRequests(userId);
+
+        log.info("Возвращено {} заявок для пользователя с ID: {}", requests.size(), userId);
+        return requests;
+    }
+
 }
 
