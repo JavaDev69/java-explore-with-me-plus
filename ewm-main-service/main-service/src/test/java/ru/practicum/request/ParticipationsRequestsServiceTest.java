@@ -48,11 +48,15 @@ class ParticipationsRequestsServiceTest {
         User requester = new User();
         requester.setId(userId);
 
+        User initiator = new User(); // Создаём инициатора
+        initiator.setId(2L); // ID отличается от requester
+
         Event event = new Event();
         event.setId(eventId);
         event.setState(EventState.PUBLISHED);
         event.setParticipantLimit(10);
         event.setRequestModeration(false);
+        event.setInitiator(initiator); // Устанавливаем инициатора
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(requester));
         when(eventsRepository.findById(eventId)).thenReturn(Optional.of(event));
@@ -62,6 +66,7 @@ class ParticipationsRequestsServiceTest {
         ParticipationRequest savedRequest = new ParticipationRequest();
         savedRequest.setId(1000L);
         savedRequest.setStatus(EventState.CONFIRMED);
+        savedRequest.setEvent(event); // Связываем с событием
         when(requestRepository.save(any(ParticipationRequest.class))).thenReturn(savedRequest);
 
         // When
@@ -75,6 +80,7 @@ class ParticipationsRequestsServiceTest {
         verify(eventsRepository, times(1)).findById(eventId);
     }
 
+
     @Test
     void createParticipationRequest_Success_Pending() {
         // Given
@@ -84,11 +90,15 @@ class ParticipationsRequestsServiceTest {
         User requester = new User();
         requester.setId(userId);
 
+        User initiator = new User(); // Создаём инициатора
+        initiator.setId(3L); // ID отличается от requester
+
         Event event = new Event();
         event.setId(eventId);
         event.setState(EventState.PUBLISHED);
         event.setParticipantLimit(5);
         event.setRequestModeration(true);
+        event.setInitiator(initiator); // Устанавливаем инициатора
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(requester));
         when(eventsRepository.findById(eventId)).thenReturn(Optional.of(event));
@@ -106,7 +116,9 @@ class ParticipationsRequestsServiceTest {
         // Then
         assertNotNull(result);
         assertEquals(EventState.PENDING, result.getStatus());
+        verify(requestRepository, times(1)).save(any(ParticipationRequest.class));
     }
+
 
     @Test
     void createParticipationRequest_UserNotFound_ThrowsNotFoundException() {
@@ -175,9 +187,13 @@ class ParticipationsRequestsServiceTest {
         User requester = new User();
         requester.setId(userId);
 
+        User initiator = new User(); // Создаём инициатора
+        initiator.setId(2L); // ID отличается от requester
+
         Event event = new Event();
         event.setId(eventId);
         event.setState(EventState.PENDING); // не PUBLISHED
+        event.setInitiator(initiator); // Устанавливаем инициатора
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(requester));
         when(eventsRepository.findById(eventId)).thenReturn(Optional.of(event));
@@ -189,6 +205,7 @@ class ParticipationsRequestsServiceTest {
         assertEquals("Cannot participate in unpublished event", exception.getMessage());
     }
 
+
     @Test
     void createParticipationRequest_DuplicateRequest_ThrowsConflictException() {
         // Given
@@ -198,9 +215,13 @@ class ParticipationsRequestsServiceTest {
         User requester = new User();
         requester.setId(userId);
 
+        User initiator = new User(); // Создаём инициатора
+        initiator.setId(2L);
+
         Event event = new Event();
         event.setId(eventId);
         event.setState(EventState.PUBLISHED);
+        event.setInitiator(initiator); // Устанавливаем инициатора
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(requester));
         when(eventsRepository.findById(eventId)).thenReturn(Optional.of(event));
@@ -213,6 +234,7 @@ class ParticipationsRequestsServiceTest {
         assertEquals("Duplicate participation request", exception.getMessage());
     }
 
+
     @Test
     void createParticipationRequest_ParticipantLimitReached_ThrowsConflictException() {
         // Given
@@ -222,11 +244,15 @@ class ParticipationsRequestsServiceTest {
         User requester = new User();
         requester.setId(userId);
 
+        User initiator = new User(); // Создаём инициатора
+        initiator.setId(2L);
+
         Event event = new Event();
         event.setId(eventId);
         event.setState(EventState.PUBLISHED);
         event.setParticipantLimit(5); // лимит 5 участников
         event.setRequestModeration(false);
+        event.setInitiator(initiator); // Устанавливаем инициатора
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(requester));
         when(eventsRepository.findById(eventId)).thenReturn(Optional.of(event));
@@ -240,6 +266,7 @@ class ParticipationsRequestsServiceTest {
         assertEquals("Event participant limit reached", exception.getMessage());
     }
 
+
     @Test
     void createParticipationRequest_NoLimit_Success() {
         // Given
@@ -249,21 +276,24 @@ class ParticipationsRequestsServiceTest {
         User requester = new User();
         requester.setId(userId);
 
+        User initiator = new User(); // Создаём инициатора
+        initiator.setId(4L);
+
         Event event = new Event();
         event.setId(eventId);
         event.setState(EventState.PUBLISHED);
         event.setParticipantLimit(0); // без лимита
         event.setRequestModeration(true);
+        event.setInitiator(initiator); // Устанавливаем инициатора
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(requester));
         when(eventsRepository.findById(eventId)).thenReturn(Optional.of(event));
         when(requestRepository.existsByEventIdAndRequesterId(eventId, userId)).thenReturn(false);
-        // countByEventIdAndStatus может вернуть любое число — лимит не ограничен
-        when(requestRepository.countByEventIdAndStatus(eventId, EventState.CONFIRMED)).thenReturn(100L);
 
         ParticipationRequest savedRequest = new ParticipationRequest();
         savedRequest.setId(3000L);
         savedRequest.setStatus(EventState.PENDING);
+        savedRequest.setEvent(event); // Связываем с событием
         when(requestRepository.save(any(ParticipationRequest.class))).thenReturn(savedRequest);
 
         // When
@@ -274,4 +304,5 @@ class ParticipationsRequestsServiceTest {
         assertEquals(EventState.PENDING, result.getStatus());
         verify(requestRepository, times(1)).save(any(ParticipationRequest.class));
     }
+
 }

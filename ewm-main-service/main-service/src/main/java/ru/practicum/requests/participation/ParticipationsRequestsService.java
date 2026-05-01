@@ -77,6 +77,8 @@ public class ParticipationsRequestsService {
         }
 
         ParticipationRequest savedRequest = requestRepository.save(request);
+        savedRequest.setRequester(requester);
+        savedRequest.setEvent(event);
         log.info("Создана заявка на участие с ID: {}, статус: {}", savedRequest.getId(), savedRequest.getStatus());
 
         return toDto(savedRequest);
