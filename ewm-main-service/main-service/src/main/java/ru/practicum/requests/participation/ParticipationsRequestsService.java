@@ -1,5 +1,6 @@
 package ru.practicum.requests.participation;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,9 +23,9 @@ import java.util.stream.Collectors;
 
 import static ru.practicum.requests.RequestsMapper.toDto;
 
+@AllArgsConstructor
 @Service
 @Slf4j
-@Data
 public class ParticipationsRequestsService {
 
     private UserRepository userRepository;
@@ -70,12 +71,12 @@ public class ParticipationsRequestsService {
         request.setEvent(event);
         request.setRequester(requester);
         request.setCreated(LocalDateTime.now());
-
+        log.info("Статус пре-модерации {}", event.getRequestModeration());
         // 8. Устанавливаем статус в зависимости от настройки пре‑модерации
         if (Boolean.FALSE.equals(event.getRequestModeration())) {
-            request.setStatus(EventState.CONFIRMED);
-        } else {
             request.setStatus(EventState.PENDING);
+        } else {
+            request.setStatus(EventState.CONFIRMED);
         }
 
         ParticipationRequest savedRequest = requestRepository.save(request);
