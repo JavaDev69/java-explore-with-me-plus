@@ -2,9 +2,8 @@ package ru.practicum.compilation.service;
 
 
 import ru.practicum.compilation.CompilationDto;
-import ru.practicum.compilation.UpdateCompilationRequest;
 import ru.practicum.compilation.NewCompilationDto;
-
+import ru.practicum.compilation.UpdateCompilationRequest;
 
 import java.util.List;
 

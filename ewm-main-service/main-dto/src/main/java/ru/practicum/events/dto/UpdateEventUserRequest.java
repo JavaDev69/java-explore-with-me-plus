@@ -1,9 +1,10 @@
 package ru.practicum.events.dto;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
-import org.springframework.format.annotation.DateTimeFormat;
 import ru.practicum.events.Location;
 import ru.practicum.events.StateAction;
 
@@ -11,7 +12,7 @@ import java.time.LocalDateTime;
 
 @Builder
 @Data
-public class UpdateEventUserRequest implements UpdateEventRequest{
+public class UpdateEventUserRequest implements UpdateEventRequest {
 
     @Size(min = 20, max = 2000, message = "Аннотация должна быть от 20 до 2000 символов")
     private String annotation;

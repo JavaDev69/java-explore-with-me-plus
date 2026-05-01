@@ -8,8 +8,6 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.StatsClient;
 import ru.practicum.compilation.*;
 import ru.practicum.dto.ViewStats;
-
-import ru.practicum.compilation.NewCompilationDto;
 import ru.practicum.error.exception.NotFoundException;
 import ru.practicum.events.Event;
 import ru.practicum.events.EventState;
@@ -17,7 +15,10 @@ import ru.practicum.events.EventsRepository;
 import ru.practicum.requests.RequestRepository;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -226,7 +227,8 @@ public class CompilationServiceImpl implements CompilationService {
                 try {
                     Long eventId = Long.parseLong(uri.substring("/events/".length()));
                     viewsMap.put(eventId, stat.getHits());
-                } catch (NumberFormatException ignored) {}
+                } catch (NumberFormatException ignored) {
+                }
             }
         }
         return viewsMap;

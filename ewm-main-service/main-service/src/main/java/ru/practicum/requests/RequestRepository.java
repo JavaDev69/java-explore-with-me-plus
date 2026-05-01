@@ -6,6 +6,7 @@ import org.springframework.data.repository.query.Param;
 import ru.practicum.events.EventState;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface RequestRepository extends JpaRepository<ParticipationRequest, Long> {
 
@@ -25,4 +26,10 @@ public interface RequestRepository extends JpaRepository<ParticipationRequest, L
     boolean existsByEventIdAndRequesterId(Long eventId, Long requesterId);
 
     List<ParticipationRequest> findByEventId(Long eventId);
+
+    List<ParticipationRequest> findByRequesterId(Long requesterId);
+
+    Optional<ParticipationRequest> findByIdAndRequesterId(Long requestId, Long requesterId);
+
+    Optional<ParticipationRequest> findById(Long id);
 }

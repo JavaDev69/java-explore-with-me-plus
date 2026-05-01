@@ -7,8 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
-import org.springframework.validation.method.MethodValidationResult;
-import org.springframework.validation.method.ParameterValidationResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -110,9 +108,8 @@ public class GlobalExceptionHandler {
     /**
      * Обработка конфликтов дубликат email
      * <p>
-     *
+     * <p>
      * ОБРАТИТЬ ВНИМАНИЕ НА КОММЕНТАРИЙ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-     *
      */
     @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler(DataIntegrityViolationException.class)
@@ -217,15 +214,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleBadRequest(BadRequestException ex) {
 
         ErrorResponse error = new ErrorResponse(
-       "BAD_REQUEST",
-        "Incorrectly made request.",
-        ex.getMessage(),
-        LocalDateTime.now()
+                "BAD_REQUEST",
+                "Incorrectly made request.",
+                ex.getMessage(),
+                LocalDateTime.now()
         );
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
-
-
 }
 
