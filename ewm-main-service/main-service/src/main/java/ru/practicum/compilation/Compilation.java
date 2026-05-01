@@ -37,7 +37,6 @@ public class Compilation {
     )
     private List<Event> events = new ArrayList<>();
 
-    // Конструктор для создания подборки с базовыми полями
     public Compilation(String title, Boolean pinned, String description) {
         this.title = title;
         this.pinned = pinned;

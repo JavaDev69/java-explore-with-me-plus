@@ -10,9 +10,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.compilation.controller.AdminCompilationController;
 import ru.practicum.compilation.service.CompilationService;
 
-import ru.practicum.dto.compilation.NewCompilationDto;
-
-
 import java.util.Collections;
 import java.util.List;
 

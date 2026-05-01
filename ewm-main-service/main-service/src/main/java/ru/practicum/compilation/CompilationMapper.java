@@ -1,8 +1,5 @@
 package ru.practicum.compilation;
 
-
-import ru.practicum.dto.compilation.NewCompilationDto;
-
 import ru.practicum.events.Event;
 import ru.practicum.events.EventsMapper;
 import ru.practicum.events.dto.EventShortDto;
@@ -44,4 +41,5 @@ public class CompilationMapper {
                 .events(shortEvents)
                 .build();
     }
+
 }

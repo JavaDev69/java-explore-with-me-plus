@@ -9,7 +9,7 @@ import ru.practicum.StatsClient;
 import ru.practicum.compilation.*;
 import ru.practicum.dto.ViewStats;
 
-import ru.practicum.dto.compilation.NewCompilationDto;
+import ru.practicum.compilation.NewCompilationDto;
 import ru.practicum.error.exception.NotFoundException;
 import ru.practicum.events.Event;
 import ru.practicum.events.EventState;
@@ -31,6 +31,12 @@ public class CompilationServiceImpl implements CompilationService {
     private final RequestRepository requestRepository;
     private final StatsClient statsClient;
 
+    /**
+     * Создает новую подборку событий.
+     *
+     * @param dto DTO с данными для создания подборки
+     * @return созданная подборка с заполненной статистикой просмотров и подтвержденных запросов
+     */
     @Transactional
     @Override
     public CompilationDto createCompilation(NewCompilationDto dto) {
@@ -47,16 +53,28 @@ public class CompilationServiceImpl implements CompilationService {
         return mapToDtoWithStats(saved);
     }
 
+    /**
+     * Удаляет подборку по идентификатору.
+     *
+     * @param compId идентификатор подборки
+     * @throws NotFoundException если подборка с указанным идентификатором не найдена
+     */
     @Transactional
     @Override
     public void deleteCompilation(Long compId) {
         log.info("Удаление подборки с ID: {}", compId);
-        if (!compilationRepository.existsById(compId)) {
-            throw new NotFoundException("Compilation with id=" + compId + " was not found");
-        }
-        compilationRepository.deleteById(compId);
+        long deletedRows = compilationRepository.deleteCompilationById(compId);
+        if (deletedRows == 0) throw new NotFoundException("Compilation with id=" + compId + " was not found");
     }
 
+    /**
+     * Обновляет данные подборки.
+     *
+     * @param compId идентификатор подборки
+     * @param request запрос с данными для обновления
+     * @return обновленная подборка с заполненной статистикой
+     * @throws NotFoundException если подборка с указанным идентификатором не найдена
+     */
     @Transactional
     @Override
     public CompilationDto updateCompilation(Long compId, UpdateCompilationRequest request) {
@@ -67,9 +85,11 @@ public class CompilationServiceImpl implements CompilationService {
         if (request.getTitle() != null && !request.getTitle().isBlank()) {
             compilation.setTitle(request.getTitle());
         }
+
         if (request.getPinned() != null) {
             compilation.setPinned(request.getPinned());
         }
+
         if (request.getEvents() != null) {
             if (request.getEvents().isEmpty()) {
                 compilation.setEvents(new ArrayList<>());
@@ -83,6 +103,14 @@ public class CompilationServiceImpl implements CompilationService {
         return mapToDtoWithStats(updated);
     }
 
+    /**
+     * Получает список подборок с пагинацией и опциональной фильтрацией по признаку закрепления.
+     *
+     * @param pinned фильтр по признаку закрепления (null - без фильтрации)
+     * @param from индекс первого элемента для пагинации
+     * @param size количество элементов на странице
+     * @return список подборок с заполненной статистикой
+     */
     @Override
     public List<CompilationDto> getCompilations(Boolean pinned, Integer from, Integer size) {
         log.info("Получение списка подборок (pinned={}, from={}, size={})", pinned, from, size);
@@ -98,6 +126,13 @@ public class CompilationServiceImpl implements CompilationService {
         return mapToDtoListWithStats(compilations);
     }
 
+    /**
+     * Получает подборку по идентификатору.
+     *
+     * @param compId идентификатор подборки
+     * @return подборка с заполненной статистикой
+     * @throws NotFoundException если подборка с указанным идентификатором не найдена
+     */
     @Override
     public CompilationDto getCompilationById(Long compId) {
         log.info("Получение подборки с ID: {}", compId);
@@ -108,10 +143,22 @@ public class CompilationServiceImpl implements CompilationService {
     }
 
 
+    /**
+     * Преобразует подборку в DTO с заполненной статистикой.
+     *
+     * @param compilation подборка для преобразования
+     * @return DTO с данными подборки и статистикой
+     */
     private CompilationDto mapToDtoWithStats(Compilation compilation) {
-        return mapToDtoListWithStats(List.of(compilation)).get(0);
+        return mapToDtoListWithStats(List.of(compilation)).getFirst();
     }
 
+    /**
+     * Преобразует список подборок в список DTO с заполненной статистикой.
+     *
+     * @param compilations список подборок для преобразования
+     * @return список DTO с данными подборок и статистикой
+     */
     private List<CompilationDto> mapToDtoListWithStats(List<Compilation> compilations) {
         List<Event> allEvents = compilations.stream()
                 .flatMap(c -> c.getEvents().stream())
@@ -126,6 +173,12 @@ public class CompilationServiceImpl implements CompilationService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Получает карту количества подтвержденных запросов для списка событий.
+     *
+     * @param events список событий
+     * @return карта, где ключ - идентификатор события, значение - количество подтвержденных запросов
+     */
     private Map<Long, Long> getConfirmedRequestsMap(List<Event> events) {
         if (events.isEmpty()) return Map.of();
 
@@ -142,6 +195,12 @@ public class CompilationServiceImpl implements CompilationService {
                 ));
     }
 
+    /**
+     * Получает карту количества просмотров для списка событий из сервиса статистики.
+     *
+     * @param events список событий
+     * @return карта, где ключ - идентификатор события, значение - количество просмотров
+     */
     private Map<Long, Long> getViewsMap(List<Event> events) {
         if (events.isEmpty()) return Map.of();
 
