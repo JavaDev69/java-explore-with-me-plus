@@ -18,7 +18,7 @@ public class PrivateParticipationRequestController {
     private final ParticipationsRequestsService participationsRequestsService;
 
     @PostMapping
-    @ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(HttpStatus.CREATED)
     public ParticipationRequestDto createParticipationRequest(
             @PathVariable @Positive Long userId,
             @RequestParam @Positive Long eventId) {

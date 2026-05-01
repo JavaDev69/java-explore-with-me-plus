@@ -51,7 +51,7 @@
         @Override
         public EventFullDto saveEvent(NewEventDto newEventDto, Long userId) {
             log.info("Начинаем сохранение события для пользователя с ID: {}", userId);
-
+            log.info("Статус пре-модерации {}",newEventDto.getRequestModeration());
             validateEventDate(newEventDto.getEventDate());
             User user = findUserById(userId);
             Category category = findCategoryById(newEventDto.getCategory());
@@ -353,48 +353,56 @@
         public EventFullDto updateInactiveEvent(Long userId, Long eventId, UpdateEventUserRequest updateEventUserRequest) {
             log.info("Начало обновления события с ID: {} для пользователя с ID: {}", eventId, userId);
             log.info("Dto {}", updateEventUserRequest);
-            // 1. Проверяем поле stateAction — должно быть CANCEL_REVIEW
-            if (updateEventUserRequest.getStateAction() != StateAction.CANCEL_REVIEW) {
-                throw new ForbiddenActionException(
-                        "Поле stateAction должно иметь значение CANCEL_REVIEW. Текущее значение: " +
-                                updateEventUserRequest.getStateAction()
-                );
+
+            // 1. Проверяем stateAction
+            StateAction stateAction = updateEventUserRequest.getStateAction();
+            if (stateAction == null) {
+                throw new ForbiddenActionException("Поле stateAction обязательно для заполнения");
             }
 
-            // 2. Проверяем дату ИЗ ЗАПРОСА, если она указана — fail‑fast до обращения к БД
-            LocalDateTime updateDate = updateEventUserRequest.getEventDate();
-            if (updateDate != null) {
-                validateEventDate(updateDate);
-            }
-
-            // 3. Находим событие по ID
+            // 2. Находим событие по ID
             Event event = eventRepository.findById(eventId)
                     .orElseThrow(() -> new NotFoundException("Событие с ID " + eventId + " не найдено"));
 
-            // 4. Проверяем принадлежность события пользователю
+            // 3. Проверяем принадлежность события пользователю
             User user = event.getInitiator();
             if (!user.getId().equals(userId)) {
                 throw new ForbiddenActionException("Пользователь с ID " + userId + " не является инициатором события " + eventId);
             }
 
-            log.info("Событие {}", event);
-            // 5. Проверяем статус события: разрешены только CANCELLED или PENDING
-            if (!event.getState().equals(EventState.CANCELED)) {
-                if (!event.getState().equals(EventState.PENDING)) {
-                    throw new ForbiddenActionException(
-                            "Нельзя отменить событие с статусом " + event.getState() +
-                                    ". Отмена разрешена только для событий в статусе CANCELLED или PENDING."
-                    );
-                }
-                log.debug("Статус события {}", event.getState());
-                event.setState(EventState.CANCELED);
+            // 4. Проверяем статус события
+            EventState currentState = event.getState();
+            if (!currentState.equals(EventState.CANCELED) && !currentState.equals(EventState.PENDING)) {
+                throw new ConflictException(
+                        "Только отменённые события или события в состоянии ожидания модерации могут быть изменены. Текущий статус: " + currentState
+                );
             }
 
-            // 6. Проверяем ДАТУ СОБЫТИЯ: если в запросе даты не было, берём текущую из БД
-            if (updateDate == null) {
+            // 5. Обрабатываем stateAction
+            switch (stateAction) {
+                case SEND_TO_REVIEW:
+                    event.setState(EventState.PENDING);
+                    break;
+                case CANCEL_REVIEW:
+                    event.setState(EventState.CANCELED);
+                    break;
+                default:
+                    throw new ConflictException(
+                            "Недопустимое значение stateAction: " + stateAction +
+                                    ". Допустимые значения: SEND_TO_REVIEW, CANCEL_REVIEW"
+                    );
+            }
+
+            // 6. Проверяем дату (если указана в запросе)
+            LocalDateTime updateDate = updateEventUserRequest.getEventDate();
+            if (updateDate != null) {
+                validateEventDate(updateDate);
+            } else {
+                // Если дата не указана, проверяем существующую дату события
                 validateEventDate(event.getEventDate());
             }
 
+            // 7. Применяем обновления
             applyNonNullUpdates(event, updateEventUserRequest);
 
             Event updatedEvent = eventRepository.save(event);
@@ -402,6 +410,7 @@
 
             return toEventFullDto(updatedEvent);
         }
+
 
         /**
          * Применяет к сущности Event только те изменения из запроса, которые не равны null.

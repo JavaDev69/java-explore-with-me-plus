@@ -20,12 +20,12 @@ CREATE TABLE IF NOT EXISTS events (
     created_on TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW(),
     published_on TIMESTAMP WITHOUT TIME ZONE,
     participant_limit INTEGER NOT NULL DEFAULT 0,
-    request_moderation BOOLEAN NOT NULL DEFAULT TRUE,
+    request_moderation BOOLEAN NOT NULL DEFAULT FALSE,
     location_lat FLOAT,
     location_lon FLOAT,
     confirmed_requests BIGINT NOT NULL DEFAULT 0,
     views BIGINT NOT NULL DEFAULT 0,
-    state VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    state VARCHAR(20) NOT NULL,
     category_id BIGINT REFERENCES categories(id) ON DELETE SET NULL,
     initiator_id BIGINT REFERENCES users(id) ON DELETE CASCADE
 );
@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS events (
 CREATE TABLE IF NOT EXISTS requests (
     id BIGSERIAL PRIMARY KEY,
     created TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW(),
-    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    status VARCHAR(20) NOT NULL,
     event_id BIGINT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
     requester_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     UNIQUE (event_id, requester_id)

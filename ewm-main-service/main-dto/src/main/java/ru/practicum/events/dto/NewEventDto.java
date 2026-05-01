@@ -38,7 +38,7 @@ public class NewEventDto {
     private Integer participantLimit = 0;
 
     @NotNull(message = "Флаг модерации заявок не может быть null")
-    private Boolean requestModeration = true;
+    private Boolean requestModeration = false;
 
     @Size(min = 3, max = 120, message = "Заголовок должен содержать от 3 до 120 символов")
     @NotBlank(message = "Заголовок не может быть пустым или состоять только из пробелов")

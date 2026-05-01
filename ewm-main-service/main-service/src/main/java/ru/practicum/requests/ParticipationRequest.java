@@ -36,5 +36,5 @@ public class ParticipationRequest {
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20, nullable = false)
-    private EventState status = EventState.PENDING;
+    private EventState status;
 }

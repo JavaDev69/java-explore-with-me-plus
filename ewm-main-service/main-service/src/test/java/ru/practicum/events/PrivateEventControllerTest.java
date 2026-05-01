@@ -122,7 +122,7 @@ class PrivateEventControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict())
-                .andExpect(content().string(containsString("status\":\"FORBIDDEN\",\"reason\":\"For the requested operation the conditions are not met.")));
+                .andExpect(content().string(containsString("status\":\"CONFLICT\",\"reason\":\"Conflict occurred.\"")));
     }
 
     /**
@@ -182,7 +182,7 @@ class PrivateEventControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict())
-                .andExpect(content().string(containsString("status\":\"FORBIDDEN\",\"reason\":\"For the requested operation the conditi")));
+                .andExpect(content().string(containsString("status\":\"CONFLICT\",\"reason\":\"Conflict occurred.\",\"message")));
     }
 
     /**
