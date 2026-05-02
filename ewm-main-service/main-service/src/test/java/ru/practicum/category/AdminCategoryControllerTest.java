@@ -42,7 +42,7 @@ class AdminCategoryControllerTest {
         mockMvc.perform(post("/admin/categories")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("Conferences"));
     }
 

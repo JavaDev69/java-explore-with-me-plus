@@ -115,7 +115,7 @@ public class GlobalExceptionHandler {
      * <p>
      * ОБРАТИТЬ ВНИМАНИЕ НА КОММЕНТАРИЙ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      */
-    @ResponseStatus(HttpStatus.CONFLICT)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ErrorResponse handleDataIntegrityViolation(DataIntegrityViolationException ex) {
         String rootCauseMessage = Objects.requireNonNull(ex.getRootCause()).getMessage();

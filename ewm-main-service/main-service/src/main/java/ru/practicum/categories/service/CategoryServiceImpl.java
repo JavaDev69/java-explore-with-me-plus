@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional
 public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
@@ -72,16 +72,16 @@ public class CategoryServiceImpl implements CategoryService {
         return CategoryMapper.toCategoryDto(updated);
     }
 
-    @Transactional
     @Override
     public void deleteCategory(Long catId) {
         if (!categoryRepository.existsById(catId)) {
             throw new NotFoundException("Category with id=" + catId + " was not found");
         }
-        try {
-            categoryRepository.deleteById(catId);
-        } catch (Exception e) {
-            throw new ConflictException("Category is used and cannot be deleted");
+
+        int deletedCount = categoryRepository.deleteCategoryIfNotUsed(catId);
+
+        if (deletedCount == 0) {
+            throw new ConflictException("Category is used by events and cannot be deleted");
         }
     }
 }
