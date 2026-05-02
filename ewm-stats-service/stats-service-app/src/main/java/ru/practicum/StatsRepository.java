@@ -20,12 +20,11 @@ public interface StatsRepository extends JpaRepository<EndpointHitEntity, Long> 
             "ORDER BY COUNT(DISTINCT h.ip) DESC")
     List<ViewStats> findUniqueStats(LocalDateTime start, LocalDateTime end, List<String> uris);
 
-
-    @Query("SELECT NEW ru.practicum.dto.ViewStats(h.app, h.uri, COUNT(h)) " +
+    @Query("SELECT NEW ru.practicum.dto.ViewStats(h.app, h.uri, COUNT(*)) " +
             "FROM EndpointHitEntity AS h " +
             "WHERE h.timestamp BETWEEN :start AND :end " +
             "AND (:uris IS NULL OR h.uri IN :uris) " +
             "GROUP BY h.app, h.uri " +
-            "ORDER BY COUNT(h) DESC")
+            "ORDER BY COUNT(*) DESC")
     List<ViewStats> findAllStats(LocalDateTime start, LocalDateTime end, List<String> uris);
 }
