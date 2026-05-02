@@ -21,9 +21,11 @@ import ru.practicum.user.UserRepository;
 import java.time.LocalDateTime;
 
 import static org.hamcrest.Matchers.containsString;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static ru.practicum.common.Constance.FORMATTER;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -90,7 +92,7 @@ class PrivateEventControllerTest {
     /**
      * Проверяет успешное обновление события с корректными данными → 200 OK.
      */
-    /*@Test
+    @Test
     void shouldUpdateEventSuccessfully() throws Exception {
         UpdateEventUserRequest request = UpdateEventUserRequest.builder()
                 .annotation("Updated annotation with sufficient length to meet the minimum 20 characters requirement")
@@ -106,27 +108,8 @@ class PrivateEventControllerTest {
                 .andExpect(jsonPath("$.title").value("Updated title that meets the minimum 3 characters requirement"))
                 .andExpect(jsonPath("$.annotation").value("Updated annotation with sufficient length to meet the minimum 20 characters requirement"))
                 .andExpect(jsonPath("$.state").value("CANCELED"));
-    }*/
-
-
-    /**
-     * Проверяет валидацию stateAction: не CANCEL_REVIEW → 403 Forbidden.
-     */
-   /* @Test
-    void shouldReturnForbiddenWhenStateActionInvalid() throws Exception {
-        // Given
-        UpdateEventUserRequest request = UpdateEventUserRequest.builder()
-                .stateAction(StateAction.PUBLISH_EVENT) // Неверный статус
-                .build();
-
-        // When & Then
-        mockMvc.perform(patch("/users/{userId}/events/{eventId}", user.getId(), event.getId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isConflict())
-                .andExpect(content().string(containsString("status\":\"CONFLICT\",\"reason\":\"Conflict occurred.\"")));
     }
-*/
+
     /**
      * Проверяет ошибку «событие не найдено» → 404 Not Found.
      */
@@ -255,7 +238,7 @@ class PrivateEventControllerTest {
     /**
      * Проверяет, что null‑поля в запросе не перезаписывают существующие значения.
      */
-    /*@Test
+    @Test
     void shouldNotUpdateNullFields() throws Exception {
         // Given: только stateAction, все остальные поля null
         UpdateEventUserRequest request = UpdateEventUserRequest.builder()
@@ -270,9 +253,9 @@ class PrivateEventControllerTest {
                 // Проверяем, что все исходные значения сохранились
                 .andExpect(jsonPath("$.title").value("Test Event"))
                 .andExpect(jsonPath("$.annotation").value("Test annotation"))
-                .andExpect(jsonPath("$.eventDate").value(Matchers.startsWith(event.getEventDate().toString().substring(0, 19))
-                ));
-    }*/
+                .andExpect(jsonPath("$.eventDate").value(
+                        Matchers.startsWith(event.getEventDate().format(FORMATTER))));
+    }
 
     /**
      * Проверяет успешное получение событий пользователя с пагинацией → 200 OK.

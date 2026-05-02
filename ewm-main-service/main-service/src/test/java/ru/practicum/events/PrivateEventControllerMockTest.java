@@ -1,4 +1,4 @@
-/*package ru.practicum.events;
+package ru.practicum.events;
 
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
@@ -25,6 +25,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static ru.practicum.common.Constance.FORMATTER;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -106,7 +107,7 @@ class PrivateEventControllerMockTest {
                 .confirmedRequests(5L)
                 .createdOn(event.getCreatedOn().toString())
                 .description(event.getDescription())
-                .eventDate(event.getEventDate())
+                .eventDate(event.getEventDate().format(FORMATTER))
                 .initiator(userShortDto)
                 .location(location)
                 .paid(event.getPaid())
@@ -251,4 +252,4 @@ class PrivateEventControllerMockTest {
         verify(eventsService, times(1)).getUserEventById(userId, eventId);
     }
 
-}*/
+}

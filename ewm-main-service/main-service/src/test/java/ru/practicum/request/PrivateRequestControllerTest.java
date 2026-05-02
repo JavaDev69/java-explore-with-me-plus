@@ -1,4 +1,4 @@
-/*package ru.practicum.request;
+package ru.practicum.request;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -21,6 +21,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static ru.practicum.common.Constance.FORMATTER;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -47,7 +48,7 @@ class PrivateRequestControllerTest {
 
         ParticipationRequestDto confirmedDto = ParticipationRequestDto.builder()
                 .id(1L)
-                .created(LocalDateTime.now().)
+                .created(LocalDateTime.now().format(FORMATTER))
                 .event(eventId)
                 .requester(3L)
                 .status(EventState.CONFIRMED)
@@ -77,7 +78,7 @@ class PrivateRequestControllerTest {
 
         ParticipationRequestDto requestDto = ParticipationRequestDto.builder()
                 .id(1L)
-                .created(LocalDateTime.now())
+                .created(LocalDateTime.now().format(FORMATTER))
                 .event(eventId)
                 .requester(3L)
                 .status(EventState.PENDING)
@@ -169,4 +170,4 @@ class PrivateRequestControllerTest {
         mockMvc.perform(get("/users/{userId}/events/{eventId}/requests", userId, invalidEventId))
                 .andExpect(status().isBadRequest());
     }
-}*/
+}

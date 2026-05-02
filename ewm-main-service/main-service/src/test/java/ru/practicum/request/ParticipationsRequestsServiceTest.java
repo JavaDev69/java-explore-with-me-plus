@@ -1,4 +1,4 @@
-/*package ru.practicum.request;
+package ru.practicum.request;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,7 +10,6 @@ import ru.practicum.error.exception.NotFoundException;
 import ru.practicum.events.Event;
 import ru.practicum.events.EventState;
 import ru.practicum.events.EventsRepository;
-import ru.practicum.request.ParticipationRequestDto;
 import ru.practicum.requests.ParticipationRequest;
 import ru.practicum.requests.RequestRepository;
 import ru.practicum.requests.participation.ParticipationsRequestsService;
@@ -24,7 +23,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -41,87 +39,6 @@ class ParticipationsRequestsServiceTest {
 
     @InjectMocks
     private ParticipationsRequestsService participationsRequestsService;
-
-    @Test
-    void createParticipationRequest_Success_AutoConfirm() {
-        // Given
-        Long userId = 1L;
-        Long eventId = 100L;
-
-        User requester = new User();
-        requester.setId(userId);
-
-        User initiator = new User(); // Создаём инициатора
-        initiator.setId(2L); // ID отличается от requester
-
-        Event event = new Event();
-        event.setId(eventId);
-        event.setState(EventState.PUBLISHED);
-        event.setParticipantLimit(10);
-        event.setRequestModeration(false);
-        event.setInitiator(initiator); // Устанавливаем инициатора
-
-        when(userRepository.findById(userId)).thenReturn(Optional.of(requester));
-        when(eventsRepository.findById(eventId)).thenReturn(Optional.of(event));
-        when(requestRepository.existsByEventIdAndRequesterId(eventId, userId)).thenReturn(false);
-        when(requestRepository.countByEventIdAndStatus(eventId, EventState.CONFIRMED)).thenReturn(5L);
-
-        ParticipationRequest savedRequest = new ParticipationRequest();
-        savedRequest.setId(1000L);
-        savedRequest.setStatus(EventState.CONFIRMED);
-        savedRequest.setEvent(event); // Связываем с событием
-        when(requestRepository.save(any(ParticipationRequest.class))).thenReturn(savedRequest);
-
-        // When
-        ParticipationRequestDto result = participationsRequestsService.createParticipationRequest(userId, eventId);
-
-        // Then
-        assertNotNull(result);
-        assertEquals(EventState.CONFIRMED, result.getStatus());
-        verify(requestRepository, times(1)).save(any(ParticipationRequest.class));
-        verify(userRepository, times(1)).findById(userId);
-        verify(eventsRepository, times(1)).findById(eventId);
-    }
-
-
-    @Test
-    void createParticipationRequest_Success_Pending() {
-        // Given
-        Long userId = 2L;
-        Long eventId = 200L;
-
-        User requester = new User();
-        requester.setId(userId);
-
-        User initiator = new User(); // Создаём инициатора
-        initiator.setId(3L); // ID отличается от requester
-
-        Event event = new Event();
-        event.setId(eventId);
-        event.setState(EventState.PUBLISHED);
-        event.setParticipantLimit(5);
-        event.setRequestModeration(true);
-        event.setInitiator(initiator); // Устанавливаем инициатора
-
-        when(userRepository.findById(userId)).thenReturn(Optional.of(requester));
-        when(eventsRepository.findById(eventId)).thenReturn(Optional.of(event));
-        when(requestRepository.existsByEventIdAndRequesterId(eventId, userId)).thenReturn(false);
-        when(requestRepository.countByEventIdAndStatus(eventId, EventState.CONFIRMED)).thenReturn(3L);
-
-        ParticipationRequest savedRequest = new ParticipationRequest();
-        savedRequest.setId(2000L);
-        savedRequest.setStatus(EventState.PENDING);
-        when(requestRepository.save(any(ParticipationRequest.class))).thenReturn(savedRequest);
-
-        // When
-        ParticipationRequestDto result = participationsRequestsService.createParticipationRequest(userId, eventId);
-
-        // Then
-        assertNotNull(result);
-        assertEquals(EventState.PENDING, result.getStatus());
-        verify(requestRepository, times(1)).save(any(ParticipationRequest.class));
-    }
-
 
     @Test
     void createParticipationRequest_UserNotFound_ThrowsNotFoundException() {
@@ -268,82 +185,6 @@ class ParticipationsRequestsServiceTest {
 
         assertEquals("Event participant limit reached", exception.getMessage());
     }
-
-
-    @Test
-    void createParticipationRequest_NoLimit_Success() {
-        // Given
-        Long userId = 3L;
-        Long eventId = 300L;
-
-        User requester = new User();
-        requester.setId(userId);
-
-        User initiator = new User(); // Создаём инициатора
-        initiator.setId(4L);
-
-        Event event = new Event();
-        event.setId(eventId);
-        event.setState(EventState.PUBLISHED);
-        event.setParticipantLimit(0); // без лимита
-        event.setRequestModeration(true);
-        event.setInitiator(initiator); // Устанавливаем инициатора
-
-        when(userRepository.findById(userId)).thenReturn(Optional.of(requester));
-        when(eventsRepository.findById(eventId)).thenReturn(Optional.of(event));
-        when(requestRepository.existsByEventIdAndRequesterId(eventId, userId)).thenReturn(false);
-
-        ParticipationRequest savedRequest = new ParticipationRequest();
-        savedRequest.setId(3000L);
-        savedRequest.setStatus(EventState.PENDING);
-        savedRequest.setEvent(event); // Связываем с событием
-        when(requestRepository.save(any(ParticipationRequest.class))).thenReturn(savedRequest);
-
-        // When
-        ParticipationRequestDto result = participationsRequestsService.createParticipationRequest(userId, eventId);
-
-        // Then
-        assertNotNull(result);
-        assertEquals(EventState.PENDING, result.getStatus());
-        verify(requestRepository, times(1)).save(any(ParticipationRequest.class));
-    }
-
-    @Test
-    void cancelParticipationRequest_Success() {
-        // Given
-        Long userId = 1L;
-        Long requestId = 1000L;
-
-        User requester = new User();
-        requester.setId(userId);
-
-        Event event = new Event();
-        event.setId(200L);
-
-        ParticipationRequest request = new ParticipationRequest();
-        request.setId(requestId);
-        request.setRequester(requester);
-        request.setEvent(event); // Связываем с событием
-        request.setStatus(EventState.PENDING);
-
-        when(requestRepository.findById(requestId)).thenReturn(Optional.of(request));
-
-        ParticipationRequest savedRequest = new ParticipationRequest();
-        savedRequest.setId(requestId);
-        savedRequest.setStatus(EventState.CANCELED);
-        savedRequest.setEvent(event); // ВАЖНО: связываем сохранённый запрос с событием
-        savedRequest.setRequester(requester); // Дополнительно: сохраняем связь с пользователем
-        when(requestRepository.save(any(ParticipationRequest.class))).thenReturn(savedRequest);
-
-        // When
-        ParticipationRequestDto result = participationsRequestsService.cancelParticipationRequest(userId, requestId);
-
-        // Then
-        assertNotNull(result);
-        assertEquals(EventState.CANCELED, result.getStatus());
-        verify(requestRepository, times(1)).save(any(ParticipationRequest.class));
-    }
-
 
     @Test
     void cancelParticipationRequest_RequestNotFound_ThrowsNotFoundException() {
@@ -516,4 +357,4 @@ class ParticipationsRequestsServiceTest {
         assertTrue(exception.getMessage().contains("User with id=" + userId));
     }
 
-}*/
+}

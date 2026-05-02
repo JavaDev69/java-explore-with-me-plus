@@ -1,4 +1,4 @@
-/*package ru.practicum.events;
+package ru.practicum.events;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +21,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static ru.practicum.common.Constance.FORMATTER;
 
 @WebMvcTest(PublicEventsController.class)
 public class PublicEventsControllerTest {
@@ -41,7 +42,7 @@ public class PublicEventsControllerTest {
         event1.setTitle("Festival");
         event1.setAnnotation("Summer music festival");
         event1.setConfirmedRequests(5L);
-        event1.setEventDate(LocalDateTime.now().plusDays(10));
+        event1.setEventDate(LocalDateTime.now().format(FORMATTER));
         event1.setPaid(true);
         event1.setViews(100L);
 
@@ -76,7 +77,7 @@ public class PublicEventsControllerTest {
         event.setId(1L);
         event.setTitle("Concert");
         event.setDescription("Rock concert");
-        event.setEventDate(LocalDateTime.now().plusDays(5));
+        event.setEventDate(LocalDateTime.now().plusDays(5).format(FORMATTER));
         event.setPaid(false);
         event.setViews(200L);
 
@@ -90,4 +91,4 @@ public class PublicEventsControllerTest {
         verify(statsClient).hit(any(EndpointHit.class));
     }
 }
-*/
+

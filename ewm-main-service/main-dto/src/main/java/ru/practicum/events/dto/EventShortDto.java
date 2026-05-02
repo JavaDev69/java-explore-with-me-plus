@@ -4,8 +4,6 @@ import lombok.Data;
 import ru.practicum.categories.CategoryDto;
 import ru.practicum.user.UserShortDto;
 
-import java.time.LocalDateTime;
-
 @Data
 public class EventShortDto {
     private Long id;

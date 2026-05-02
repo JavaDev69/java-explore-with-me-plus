@@ -4,8 +4,6 @@ import lombok.Builder;
 import lombok.Data;
 import ru.practicum.events.EventState;
 
-import java.time.LocalDateTime;
-
 @Builder
 @Data
 public class ParticipationRequestDto {

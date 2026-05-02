@@ -11,7 +11,7 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     boolean existsByName(String name);
 
     @Modifying
-    @Query(value = "DELETE FROM categories c WHERE c.id = :catId AND NOT EXISTS "+
+    @Query(value = "DELETE FROM categories c WHERE c.id = :catId AND NOT EXISTS " +
             "(SELECT 1 FROM events e WHERE e.category_id = :catId)", nativeQuery = true)
     int deleteCategoryIfNotUsed(@Param("catId") Long catId);
 }

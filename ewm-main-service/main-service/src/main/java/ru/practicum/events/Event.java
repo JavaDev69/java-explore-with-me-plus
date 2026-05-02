@@ -11,6 +11,7 @@
     @Table(name = "events")
     @Getter
     @Setter
+    @ToString
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor

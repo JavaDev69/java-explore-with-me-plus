@@ -59,7 +59,7 @@ class UserControllerTest {
     /**
      * Тест 2: Дублирование email (409 Conflict)
      */
-    /*@Test
+    @Test
     void createUser_DuplicateEmail_Conflict() throws Exception {
         // Первый запрос — успешный (создаём пользователя)
         NewUserRequest firstRequest = new NewUserRequest();
@@ -81,10 +81,10 @@ class UserControllerTest {
                         .content(asJsonString(secondRequest)))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status").value("CONFLICT"))
-                .andExpect(jsonPath("$.reason").value("Integrity constraint has been violated."))
-                .andExpect(jsonPath("$.message").value(containsString("constraint [uq_email]")))
+                .andExpect(jsonPath("$.reason").value("Conflict occurred."))
+                .andExpect(jsonPath("$.message").value(containsString("User with email duplicate@example.com already exists")))
                 .andExpect(isValidTimestampFormat());
-    }*/
+    }
 
     /**
      * Тест 3: Некорректный запрос (400 Bad Request)

@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 @Table(name = "requests", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"event_id", "requester_id"}, name = "unique_requester_per_event")
 })
+@ToString
 @Getter
 @Setter
 @Builder
@@ -23,7 +24,7 @@ public class ParticipationRequest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "created", columnDefinition = "TIMESTAMP(6) WITHOUT TIME ZONE", nullable = false)
+    @Column(name = "created", nullable = false)
     private LocalDateTime created;
 
     @ManyToOne(fetch = FetchType.LAZY)

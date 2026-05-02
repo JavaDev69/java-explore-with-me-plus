@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static ru.practicum.common.Constance.FORMATTER;
 import static ru.practicum.requests.RequestsMapper.toDto;
 
 @AllArgsConstructor
@@ -70,7 +71,7 @@ public class ParticipationsRequestsService {
         request.setEvent(event);
         request.setRequester(requester);
         request.setCreated(LocalDateTime.now());
-        log.info("Статус пре-модерации {}", event.getRequestModeration());
+        log.info("Заявка при создании в методе {}", request);
 
         // 8. Устанавливаем статус с учётом лимита участников и настройки модерации
         if (event.getParticipantLimit() == 0) {
@@ -85,10 +86,12 @@ public class ParticipationsRequestsService {
         }
 
         ParticipationRequest savedRequest = requestRepository.save(request);
+        log.info("{}", savedRequest);
+
         savedRequest.setRequester(requester);
         savedRequest.setEvent(event);
         log.info("Дата создания в БД (после сохранения): {}", request.getCreated());
-        log.info("Строковое представление даты в DTO: {}", toDto(savedRequest).getCreated());
+        log.info("Строковое представление даты в DTO: {}", savedRequest.getCreated().format(FORMATTER));
         log.info("Создана заявка на участие с ID: {}, статус: {}", savedRequest.getId(), savedRequest.getStatus());
 
         return toDto(savedRequest);

@@ -8,13 +8,11 @@ import ru.practicum.user.User;
 import ru.practicum.user.UserMapper;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 import static ru.practicum.categories.CategoryMapper.toCategoryDto;
+import static ru.practicum.common.Constance.FORMATTER;
 
 public class EventsMapper {
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
 
     public static EventShortDto toShortEventDto(Event event, Long confirmedRequests) {
         EventShortDto dto = new EventShortDto();
@@ -54,7 +52,7 @@ public class EventsMapper {
     /**
      * Преобразует DTO нового события в сущность Event.
      *
-     * @param dto DTO с данными нового события
+     * @param dto  DTO с данными нового события
      * @param user пользователь-инициатор события
      * @return сущность Event, готовая для сохранения в БД
      */
@@ -77,7 +75,6 @@ public class EventsMapper {
                 .views(0L)
                 .build();
     }
-
 
     private static String format(LocalDateTime dateTime) {
         return dateTime != null ? dateTime.format(FORMATTER) : null;
