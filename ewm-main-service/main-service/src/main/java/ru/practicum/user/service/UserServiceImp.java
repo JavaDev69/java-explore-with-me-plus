@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.error.exception.ConflictException;
 import ru.practicum.user.NewUserRequest;
 import ru.practicum.user.UserDto;
 import ru.practicum.error.exception.NotFoundException;
@@ -25,10 +26,17 @@ public class UserServiceImp implements UserService {
     @Override
     public UserDto save(NewUserRequest request) {
         log.info("Начинаем создание нового пользователя: {}", request.getName());
+
+        // Проверяем уникальность email
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new ConflictException("User with email " + request.getEmail() + " already exists");
+        }
+
         User user = userRepository.save(userMapper.toEntity(request));
         log.info("Пользователь успешно создан с ID: {}", user.getId());
         return userMapper.toDto(user);
     }
+
 
     @Transactional(readOnly = true)
     @Override

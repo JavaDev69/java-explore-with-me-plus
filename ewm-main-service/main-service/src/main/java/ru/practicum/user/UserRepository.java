@@ -63,4 +63,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
      */
     @Query("SELECT u FROM User u WHERE u.id IN :ids ORDER BY u.id")
     List<User> findByIds(@Param("ids") List<Long> ids);
+
+    boolean existsByEmail(String email);
 }
