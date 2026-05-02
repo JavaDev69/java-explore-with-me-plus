@@ -39,7 +39,7 @@ public class UpdateEventUserRequest implements UpdateEventRequest {
 
     private Boolean requestModeration;
 
-    @NotNull(message = "Статус действия должен быть задан")
+    //@NotNull(message = "Статус действия должен быть задан")
     private StateAction stateAction;
 
     @Size(min = 3, max = 120, message = "Заголовок должен быть от 3 до 120 символов")

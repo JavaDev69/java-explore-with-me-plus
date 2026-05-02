@@ -1,5 +1,6 @@
 package ru.practicum.error;
 
+import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import org.apache.coyote.BadRequestException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -7,6 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
+import org.springframework.validation.method.MethodValidationResult;
+import org.springframework.validation.method.ParameterValidationResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -186,26 +189,47 @@ public class GlobalExceptionHandler {
             HandlerMethodValidationException ex) {
         Map<String, String> errors = new HashMap<>();
 
-        // Получаем все аргументы сообщения об ошибке
-        Object[] arguments = ex.getDetailMessageArguments();
-        for (Object arg : arguments) {
-            if (arg instanceof BindingResult) {
-                BindingResult bindingResult = (BindingResult) arg;
-                for (FieldError fieldError : bindingResult.getFieldErrors()) {
-                    errors.put(
-                            fieldError.getField(),
-                            fieldError.getDefaultMessage() != null
-                                    ? fieldError.getDefaultMessage()
-                                    : "Validation error"
+        // Получаем все результаты валидации
+        for (ParameterValidationResult validationResult : ex.getAllValidationResults()) {
+            // Получаем ошибки для текущего аргумента
+            for (Object error : validationResult.getResolvableErrors()) {
+                if (error instanceof FieldError fieldError) {
+                    String fieldName = fieldError.getField();
+                    String errorMessage = fieldError.getDefaultMessage();
+                    Object rejectedValue = fieldError.getRejectedValue();
+
+                    // Форматируем сообщение с указанием поля и ошибки
+                    String detailedMessage = String.format(
+                            ("Field '%s': %s (rejected value: %s)"),
+                            fieldName,
+                            errorMessage != null ? errorMessage : "Validation error",
+                            rejectedValue != null ? rejectedValue.toString() : "null"
                     );
+                    errors.put(fieldName, detailedMessage);
+                } else if (error instanceof ConstraintViolation<?> violation) {
+                    // Обработка ConstraintViolation, если есть
+                    String path = violation.getPropertyPath().toString();
+                    String message = violation.getMessage();
+                    errors.put(path, message != null ? message : "Constraint violation");
                 }
             }
+        }
+
+        String errorMessage;
+        if (!errors.isEmpty()) {
+            // Объединяем все ошибки в одну строку
+            errorMessage = "Invalid input data: " + errors.entrySet().stream()
+                    .map(e -> e.getKey() + " -> " + e.getValue())
+                    .collect(Collectors.joining("; "));
+        } else {
+            // Если ошибок нет, используем общее сообщение
+            errorMessage = "Validation failed: no specific field errors found";
         }
 
         ErrorResponse error = new ErrorResponse(
                 "BAD_REQUEST",
                 "Validation failed",
-                "Invalid input data: " + errors,
+                errorMessage,
                 LocalDateTime.now()
         );
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);

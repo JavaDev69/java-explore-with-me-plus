@@ -357,7 +357,8 @@
             // 1. Проверяем stateAction
             StateAction stateAction = updateEventUserRequest.getStateAction();
             if (stateAction == null) {
-                throw new ForbiddenActionException("Поле stateAction обязательно для заполнения");
+                stateAction = StateAction.CANCEL_REVIEW;
+                //throw new ForbiddenActionException("Поле stateAction обязательно для заполнения");
             }
 
             // 2. Находим событие по ID
