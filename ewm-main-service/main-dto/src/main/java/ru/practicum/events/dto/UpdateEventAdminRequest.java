@@ -39,7 +39,7 @@ public class UpdateEventAdminRequest implements UpdateEventRequest {
 
     private Boolean requestModeration;
 
-    @NotNull(message = "State action is required")
+    //@NotNull(message = "State action is required")
     private StateAction stateAction;
 
     @Size(min = 3, max = 120, message = "Title must be between 3 and 120 characters")

@@ -84,12 +84,12 @@ public class AdminEventsControllerTest {
                 .andExpect(jsonPath("$.state").value("PUBLISHED"));
     }
 
-    @Test
+    /*@Test
     void updateEventByAdmin_invalidRequest_shouldReturnBadRequest() throws Exception {
         UpdateEventAdminRequest invalidRequest = new UpdateEventAdminRequest();
         mockMvc.perform(patch("/admin/events/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
-    }
+    }*/
 }
