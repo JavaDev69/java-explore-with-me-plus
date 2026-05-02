@@ -22,7 +22,7 @@ public class EventsMapper {
         dto.setAnnotation(event.getAnnotation());
         dto.setCategory(toCategoryDto(event.getCategory()));
         dto.setConfirmedRequests(confirmedRequests);
-        dto.setEventDate(event.getEventDate());
+        dto.setEventDate(event.getEventDate().format(FORMATTER));
         dto.setInitiator(new UserMapper().toShortDto(event.getInitiator()));
         dto.setPaid(event.getPaid());
         dto.setTitle(event.getTitle());
