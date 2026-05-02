@@ -59,7 +59,7 @@
         private LocalDateTime publishedOn;
 
         @Column(name = "request_moderation", nullable = false)
-        private Boolean requestModeration = false;
+        private Boolean requestModeration;
 
         @Enumerated(EnumType.STRING)
         @Column(length = 20, nullable = false)

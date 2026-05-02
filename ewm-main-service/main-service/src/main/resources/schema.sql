@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS events (
     created_on TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW(),
     published_on TIMESTAMP WITHOUT TIME ZONE,
     participant_limit INTEGER NOT NULL DEFAULT 0,
-    request_moderation BOOLEAN NOT NULL DEFAULT FALSE,
+    request_moderation BOOLEAN NOT NULL,
     location_lat FLOAT,
     location_lon FLOAT,
     confirmed_requests BIGINT NOT NULL DEFAULT 0,
