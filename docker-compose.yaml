@@ -82,6 +82,6 @@ networks:
   app-network:
     driver: bridge
 
-volumes:
-  postgres-stats:
-  postgres-main:
+#volumes:
+ # postgres-stats:
+  #postgres-main:

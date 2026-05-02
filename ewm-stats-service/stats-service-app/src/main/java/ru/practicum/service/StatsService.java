@@ -3,6 +3,7 @@ package ru.practicum.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.StatsRepository;
 import ru.practicum.dto.EndpointHit;
@@ -12,6 +13,7 @@ import ru.practicum.entity.EndpointHitEntity;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class StatsService {
@@ -25,6 +27,7 @@ public class StatsService {
                 .ip(dto.getIp())
                 .timestamp(dto.getTimestamp())
                 .build();
+        log.info("Попадание {}", entity);
         statsRepository.save(entity);
     }
 
@@ -38,10 +41,14 @@ public class StatsService {
             throw new IllegalArgumentException("Start time must be before end time");
         }
 
+        List<ViewStats> vs;
         if (Boolean.TRUE.equals(unique)) {
-            return statsRepository.findUniqueStats(start, end, uris);
+            vs = statsRepository.findUniqueStats(start, end, uris);
+            log.info("Уникальные значения {}", vs);
         } else {
-            return statsRepository.findAllStats(start, end, uris);
+            vs = statsRepository.findAllStats(start, end, uris);
+            log.info("Все значения {}", vs);
         }
+        return vs;
     }
 }
