@@ -72,16 +72,24 @@ public class ParticipationsRequestsService {
         request.setRequester(requester);
         request.setCreated(LocalDateTime.now());
         log.info("Статус пре-модерации {}", event.getRequestModeration());
-        // 8. Устанавливаем статус в зависимости от настройки пре‑модерации
-        if (Boolean.FALSE.equals(event.getRequestModeration())) {
-            request.setStatus(EventState.PENDING);
-        } else {
+
+        // 8. Устанавливаем статус с учётом лимита участников и настройки модерации
+        if (event.getParticipantLimit() == 0) {
             request.setStatus(EventState.CONFIRMED);
+            log.info("Автоподтверждение: лимит участников 0, статус установлен как CONFIRMED");
+        } else if (Boolean.FALSE.equals(event.getRequestModeration())) {
+            request.setStatus(EventState.CONFIRMED);
+            log.info("Модерация отключена, статус установлен как CONFIRMED");
+        } else {
+            request.setStatus(EventState.PENDING);
+            log.info("Требуется модерация, статус установлен как PENDING");
         }
 
         ParticipationRequest savedRequest = requestRepository.save(request);
         savedRequest.setRequester(requester);
         savedRequest.setEvent(event);
+        log.info("Дата создания в БД (после сохранения): {}", request.getCreated());
+        log.info("Строковое представление даты в DTO: {}", toDto(savedRequest).getCreated());
         log.info("Создана заявка на участие с ID: {}, статус: {}", savedRequest.getId(), savedRequest.getStatus());
 
         return toDto(savedRequest);
@@ -108,7 +116,8 @@ public class ParticipationsRequestsService {
 
         ParticipationRequest savedRequest = requestRepository.save(request);
         log.info("Заявка на участие с ID: {} отменена пользователем: {}", requestId, userId);
-
+        log.info("Дата создания в БД (до отмены): {}", request.getCreated());
+        log.info("Строковое представление даты в DTO после отмены: {}", toDto(savedRequest).getCreated());
         return toDto(savedRequest);
     }
 

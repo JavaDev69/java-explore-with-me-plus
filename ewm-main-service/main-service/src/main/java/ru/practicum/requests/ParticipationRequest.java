@@ -23,8 +23,8 @@ public class ParticipationRequest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "created", nullable = false)
-    private LocalDateTime created = LocalDateTime.now();
+    @Column(name = "created", columnDefinition = "TIMESTAMP(6) WITHOUT TIME ZONE", nullable = false)
+    private LocalDateTime created;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id", nullable = false)
