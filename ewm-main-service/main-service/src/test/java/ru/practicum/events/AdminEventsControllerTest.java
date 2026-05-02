@@ -39,7 +39,7 @@ public class AdminEventsControllerTest {
         event.setId(1L);
         event.setTitle("Conference");
         event.setAnnotation("conf");
-        event.setEventDate(LocalDateTime.now().plusDays(7));
+        event.setEventDate(String.valueOf(LocalDateTime.now().plusDays(7)));
         event.setPaid(true);
         event.setState("PUBLISHED");
         event.setViews(150L);

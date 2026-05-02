@@ -38,7 +38,7 @@ public class EventsMapper {
         dto.setConfirmedRequests(event.getConfirmedRequests());
         dto.setCreatedOn(format(event.getCreatedOn()));
         dto.setDescription(event.getDescription());
-        dto.setEventDate(event.getEventDate());
+        dto.setEventDate(event.getEventDate().format(FORMATTER));
         dto.setInitiator(new UserMapper().toShortDto(event.getInitiator()));
         dto.setLocation(new Location(event.getLocationLat(), event.getLocationLon()));
         dto.setPaid(event.getPaid());

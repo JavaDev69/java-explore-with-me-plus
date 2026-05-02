@@ -22,8 +22,7 @@ public class EventFullDto {
     private Long confirmedRequests;
     private String createdOn;
     private String description;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime eventDate;
+    private String eventDate;
     private UserShortDto initiator;
     private Location location;
     private Boolean paid;
