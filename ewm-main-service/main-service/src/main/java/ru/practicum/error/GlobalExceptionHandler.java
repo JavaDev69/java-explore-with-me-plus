@@ -255,5 +255,16 @@ public class GlobalExceptionHandler {
                 LocalDateTime.now()
         );
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleIllegalArgumentException(IllegalArgumentException ex) {
+        return new ErrorResponse(
+                "BAD_REQUEST",
+                "Incorrectly made request.",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+    }
 }
 
