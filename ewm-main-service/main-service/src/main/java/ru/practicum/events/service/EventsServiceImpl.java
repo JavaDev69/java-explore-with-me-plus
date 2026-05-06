@@ -51,7 +51,7 @@
         @Override
         public EventFullDto saveEvent(NewEventDto newEventDto, Long userId) {
             log.info("Начинаем сохранение события для пользователя с ID: {}", userId);
-            log.info("Статус пре-модерации {}",newEventDto.getRequestModeration());
+            log.debug("Статус пре-модерации {}",newEventDto.getRequestModeration());
             validateEventDate(newEventDto.getEventDate());
             User user = findUserById(userId);
             Category category = findCategoryById(newEventDto.getCategory());
@@ -352,7 +352,7 @@
         @Transactional
         public EventFullDto updateInactiveEvent(Long userId, Long eventId, UpdateEventUserRequest updateEventUserRequest) {
             log.info("Начало обновления события с ID: {} для пользователя с ID: {}", eventId, userId);
-            log.info("Dto {}", updateEventUserRequest);
+            log.debug("Dto {}", updateEventUserRequest);
 
             // 1. Находим событие по ID
             Event event = eventRepository.findById(eventId)
@@ -469,7 +469,7 @@
                     .map(EventsMapper::toEventFullDto)
                     .collect(Collectors.toList());
 
-            log.debug("Найдено {} событий для пользователя с ID {}", events.size(), userId);
+            log.info("Найдено {} событий для пользователя с ID {}", events.size(), userId);
             return eventFullDtos;
         }
 
@@ -499,10 +499,7 @@
             // Обновляем просмотры
             setViewsToEvent(event);
 
-            log.debug("Полные данные события подготовлены для возврата");
+            log.info("Полные данные события подготовлены для возврата");
             return toEventFullDto(event);
         }
-
-
-
     }

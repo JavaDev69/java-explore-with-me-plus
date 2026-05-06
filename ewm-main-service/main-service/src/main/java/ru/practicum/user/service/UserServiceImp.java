@@ -18,11 +18,12 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 @Service
+@Transactional
 public class UserServiceImp implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
 
-    @Transactional
+
     @Override
     public UserDto save(NewUserRequest request) {
         log.info("Начинаем создание нового пользователя: {}", request.getName());
@@ -36,7 +37,6 @@ public class UserServiceImp implements UserService {
         log.info("Пользователь успешно создан с ID: {}", user.getId());
         return userMapper.toDto(user);
     }
-
 
     @Transactional(readOnly = true)
     @Override
@@ -62,7 +62,6 @@ public class UserServiceImp implements UserService {
         return result;
     }
 
-    @Transactional
     @Override
     public void deleteById(Long id) {
         log.info("Начинаем удаление пользователя с ID: {}", id);

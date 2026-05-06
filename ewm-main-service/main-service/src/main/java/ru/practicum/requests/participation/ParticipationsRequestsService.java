@@ -86,12 +86,12 @@ public class ParticipationsRequestsService {
         }
 
         ParticipationRequest savedRequest = requestRepository.save(request);
-        log.info("{}", savedRequest);
 
         savedRequest.setRequester(requester);
         savedRequest.setEvent(event);
-        log.info("Дата создания в БД (после сохранения): {}", request.getCreated());
-        log.info("Строковое представление даты в DTO: {}", savedRequest.getCreated().format(FORMATTER));
+        log.debug("Дата создания в БД (после сохранения): {}\nСтроковое представление даты в DTO: {}",
+                request.getCreated(), savedRequest.getCreated().format(FORMATTER));
+
         log.info("Создана заявка на участие с ID: {}, статус: {}", savedRequest.getId(), savedRequest.getStatus());
 
         return toDto(savedRequest);
@@ -117,9 +117,11 @@ public class ParticipationsRequestsService {
         request.setStatus(EventState.CANCELED);
 
         ParticipationRequest savedRequest = requestRepository.save(request);
+
+        log.debug("Дата создания в БД (до отмены): {}\nСтроковое представление даты в DTO после отмены: {}",
+                request.getCreated(), toDto(savedRequest).getCreated());
+
         log.info("Заявка на участие с ID: {} отменена пользователем: {}", requestId, userId);
-        log.info("Дата создания в БД (до отмены): {}", request.getCreated());
-        log.info("Строковое представление даты в DTO после отмены: {}", toDto(savedRequest).getCreated());
         return toDto(savedRequest);
     }
 
@@ -136,5 +138,4 @@ public class ParticipationsRequestsService {
                 .map(RequestsMapper::toDto)
                 .collect(Collectors.toList());
     }
-
 }
