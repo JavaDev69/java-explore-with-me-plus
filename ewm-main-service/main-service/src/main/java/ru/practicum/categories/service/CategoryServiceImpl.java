@@ -21,6 +21,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
 
+    @Transactional(readOnly = true)
     @Override
     public List<CategoryDto> getCategories(Integer from, Integer size) {
         PageRequest page = PageRequest.of(from / size, size);
@@ -29,14 +30,14 @@ public class CategoryServiceImpl implements CategoryService {
                 .collect(Collectors.toList());
     }
 
-
+    @Transactional(readOnly = true)
+    @Override
     public CategoryDto getCategoryById(Long catId) {
         Category category = categoryRepository.findById(catId)
                 .orElseThrow(() -> new NotFoundException("Category with id=" + catId + " was not found"));
         return CategoryMapper.toCategoryDto(category);
     }
 
-    @Transactional
     @Override
     public CategoryDto createCategory(CategoryDto dto) {
         if (dto.getName() == null || dto.getName().isBlank()) {
@@ -55,7 +56,6 @@ public class CategoryServiceImpl implements CategoryService {
         return CategoryMapper.toCategoryDto(saved);
     }
 
-    @Transactional
     @Override
     public CategoryDto updateCategory(Long catId, CategoryDto dto) {
         Category category = categoryRepository.findById(catId)

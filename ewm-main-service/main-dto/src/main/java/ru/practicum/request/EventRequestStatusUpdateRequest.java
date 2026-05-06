@@ -8,6 +8,6 @@ import java.util.List;
 @Data
 public class EventRequestStatusUpdateRequest {
     private List<Long> requestIds;
-    private EventState status; // Enum: CONFIRMED, REJECTED
+    private EventState status;
 }
 
