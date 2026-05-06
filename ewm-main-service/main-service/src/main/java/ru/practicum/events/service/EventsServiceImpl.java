@@ -354,24 +354,17 @@
             log.info("Начало обновления события с ID: {} для пользователя с ID: {}", eventId, userId);
             log.info("Dto {}", updateEventUserRequest);
 
-            // 1. Проверяем stateAction
-            StateAction stateAction = updateEventUserRequest.getStateAction();
-            if (stateAction == null) {
-                stateAction = StateAction.CANCEL_REVIEW;
-                //throw new ForbiddenActionException("Поле stateAction обязательно для заполнения");
-            }
-
-            // 2. Находим событие по ID
+            // 1. Находим событие по ID
             Event event = eventRepository.findById(eventId)
                     .orElseThrow(() -> new NotFoundException("Событие с ID " + eventId + " не найдено"));
 
-            // 3. Проверяем принадлежность события пользователю
+            // 2. Проверяем принадлежность события пользователю
             User user = event.getInitiator();
             if (!user.getId().equals(userId)) {
                 throw new ForbiddenActionException("Пользователь с ID " + userId + " не является инициатором события " + eventId);
             }
 
-            // 4. Проверяем статус события
+            // 3. Проверяем статус события
             EventState currentState = event.getState();
             if (!currentState.equals(EventState.CANCELED) && !currentState.equals(EventState.PENDING)) {
                 throw new ConflictException(
@@ -379,39 +372,41 @@
                 );
             }
 
-            // 5. Обрабатываем stateAction
-            switch (stateAction) {
-                case SEND_TO_REVIEW:
-                    event.setState(EventState.PENDING);
-                    break;
-                case CANCEL_REVIEW:
-                    event.setState(EventState.CANCELED);
-                    break;
-                default:
-                    throw new ConflictException(
-                            "Недопустимое значение stateAction: " + stateAction +
-                                    ". Допустимые значения: SEND_TO_REVIEW, CANCEL_REVIEW"
-                    );
+            // 4. Обрабатываем stateAction, если указан
+            StateAction stateAction = updateEventUserRequest.getStateAction();
+            if (stateAction != null) {
+                switch (stateAction) {
+                    case SEND_TO_REVIEW:
+                        event.setState(EventState.PENDING);
+                        break;
+                    case CANCEL_REVIEW:
+                        event.setState(EventState.CANCELED);
+                        break;
+                    default:
+                        throw new ConflictException(
+                                "Недопустимое значение stateAction: " + stateAction +
+                                        ". Допустимые значения: SEND_TO_REVIEW, CANCEL_REVIEW"
+                        );
+                }
             }
 
-            // 6. Проверяем дату (если указана в запросе)
+            // 5. Применяем обновления полей (только не‑null)
+            applyNonNullUpdates(event, updateEventUserRequest);
+
+            // 6. Валидируем дату события
             LocalDateTime updateDate = updateEventUserRequest.getEventDate();
             if (updateDate != null) {
                 validateEventDate(updateDate);
-            } else {
-                // Если дата не указана, проверяем существующую дату события
+            } else if (stateAction == StateAction.SEND_TO_REVIEW) {
                 validateEventDate(event.getEventDate());
             }
 
-            // 7. Применяем обновления
-            applyNonNullUpdates(event, updateEventUserRequest);
-
+            // 7. Сохраняем и возвращаем результат
             Event updatedEvent = eventRepository.save(event);
             log.info("Событие с ID: {} успешно обновлено", eventId);
 
             return toEventFullDto(updatedEvent);
         }
-
 
         /**
          * Применяет к сущности Event только те изменения из запроса, которые не равны null.

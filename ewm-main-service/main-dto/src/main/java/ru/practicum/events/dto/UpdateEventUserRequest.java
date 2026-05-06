@@ -2,6 +2,7 @@ package ru.practicum.events.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -38,10 +39,8 @@ public class UpdateEventUserRequest implements UpdateEventRequest {
 
     private Boolean requestModeration;
 
-    //@NotNull(message = "Статус действия должен быть задан")
     private StateAction stateAction;
 
     @Size(min = 3, max = 120, message = "Заголовок должен быть от 3 до 120 символов")
     private String title;
 }
-

@@ -1,5 +1,7 @@
 package ru.practicum.events.service;
 
+import ru.practicum.error.exception.ForbiddenActionException;
+import ru.practicum.error.exception.NotFoundException;
 import ru.practicum.events.dto.*;
 
 import java.time.LocalDateTime;
@@ -50,7 +52,7 @@ public interface EventsService {
      * @param eventId ID события, которое требуется обновить
      * @param updateEventUserRequest DTO с данными для обновления события (поля могут быть null)
      * @return DTO полного представления обновлённого события
-     * @throws EventNotFoundException если событие с указанным ID не найдено
+     * @throws NotFoundException если событие с указанным ID не найдено
      * @throws ForbiddenActionException если обновление запрещено (неверный статус или дата слишком ранняя)
      */
     EventFullDto updateInactiveEvent(Long userId, Long eventId, UpdateEventUserRequest updateEventUserRequest);

@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class UpdateEventAdminRequest implements UpdateEventRequest {
 
-    @Size(min = 20, max = 2000, message = "Annotation must be between 20 and 2000 characters")
+    @Size(min = 20)
     private String annotation;
 
     @Positive(message = "Category id must be positive")
@@ -39,7 +39,6 @@ public class UpdateEventAdminRequest implements UpdateEventRequest {
 
     private Boolean requestModeration;
 
-    //@NotNull(message = "State action is required")
     private StateAction stateAction;
 
     @Size(min = 3, max = 120, message = "Title must be between 3 and 120 characters")
