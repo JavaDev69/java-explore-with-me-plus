@@ -1,6 +1,7 @@
 package ru.practicum.comments.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
@@ -38,6 +40,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional
     public CommentDto getCommentById(Long commentId) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new NotFoundException("Comment not found"));
@@ -45,6 +48,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional
     public List<CommentDto> getCommentsByEventId(Long eventId, Integer from, Integer size) {
         PageRequest page = PageRequest.of(from / size, size);
         return commentRepository.findByEvent_IdAndStatus(eventId, CommentStatus.APPROVED, page).stream()
@@ -53,6 +57,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional
     public CommentDto updateCommentByAuthor(Long userId, Long commentId, UpdateCommentByAuthorRequest request) {
         Comment comment = commentRepository.findById(commentId).orElseThrow();
 
@@ -72,12 +77,9 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional
     public CommentDto updateCommentByModerator(Long userId, Long commentId, UpdateCommentByModeratorRequest request) {
         Comment comment = commentRepository.findById(commentId).orElseThrow();
-
-        if (!comment.getEvent().getInitiator().getId().equals(userId)) {
-            throw new IllegalArgumentException("Only event initiator can moderate");
-        }
 
         comment.setStatus(request.getStatus());
         if (request.getText() != null) {
@@ -85,7 +87,11 @@ public class CommentServiceImpl implements CommentService {
         }
         comment.setUpdatedOn(LocalDateTime.now());
 
-        return CommentMapper.toCommentDto(commentRepository.save(comment));
+        Comment saved = commentRepository.save(comment);
+        log.info("Comment {} updated by moderator {}: status={}, text={}",
+                saved.getId(), userId, saved.getStatus(), saved.getText());
+
+        return CommentMapper.toCommentDto(saved);
     }
 
     @Transactional
@@ -97,8 +103,8 @@ public class CommentServiceImpl implements CommentService {
         if (!comment.getAuthor().getId().equals(userId)) {
             throw new IllegalArgumentException("You can only delete your own comments");
         }
-        if (comment.getStatus() != CommentStatus.PENDING) {
-            throw new IllegalArgumentException("Cannot delete approved/rejected comment");
+        if (comment.getStatus() != CommentStatus.PENDING || comment.getStatus() != CommentStatus.APPROVED) {
+            throw new IllegalArgumentException("Cannot delete rejected comment");
         }
 
         commentRepository.deleteById(commentId);
@@ -107,13 +113,8 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     @Override
     public void deleteCommentByModerator(Long userId, Long commentId) {
-        Comment comment = commentRepository.findById(commentId)
+        commentRepository.findById(commentId)
                 .orElseThrow(() -> new NotFoundException("Comment not found"));
-
-        if (!comment.getEvent().getInitiator().getId().equals(userId)) {
-            throw new IllegalArgumentException("Only event initiator can delete comments");
-        }
-
         commentRepository.deleteById(commentId);
     }
 }

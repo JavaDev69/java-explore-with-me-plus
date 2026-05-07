@@ -74,6 +74,6 @@ public class Event {
     private Long views = 0L;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "comment_id", nullable = false)
+    @JoinColumn(name = "comment_id")
     private Comment comments;
 }
