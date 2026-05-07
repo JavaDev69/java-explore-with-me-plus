@@ -1,5 +1,6 @@
 package ru.practicum.events;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -55,5 +56,13 @@ public interface EventsRepository extends JpaRepository<Event, Long>, JpaSpecifi
             @Param("size") int size);
 
     Optional<Event> findById(Long id);
+
+    @Query("SELECT e FROM Event e WHERE e.requestModeration = :requestModeration AND e.state = :state")
+    Page<Event> findByRequestModerationAndState(
+            @Param("requestModeration") Boolean requestModeration,
+            @Param("state") EventState state,
+            Pageable pageable
+    );
+
 }
 

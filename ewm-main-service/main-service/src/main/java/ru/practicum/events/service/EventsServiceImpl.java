@@ -8,6 +8,7 @@
     import jakarta.transaction.Transactional;
     import lombok.RequiredArgsConstructor;
     import lombok.extern.slf4j.Slf4j;
+    import org.springframework.data.domain.Page;
     import org.springframework.data.domain.PageRequest;
     import org.springframework.data.domain.Pageable;
     import org.springframework.data.jpa.domain.Specification;
@@ -66,7 +67,14 @@
             return toEventFullDto(savedEvent);
         }
 
+        public Page<EventFullDto> getEventsForModeration(int from, int size) {
+            Pageable pageable = PageRequest.of(from, size);
+            Page<Event> events = eventRepository.findByRequestModerationAndState(
+                    Boolean.TRUE, EventState.PENDING, pageable
+            );
 
+            return events.map(EventsMapper::toEventFullDto);
+        }
 
         @Override
         public List<EventShortDto> getPublishedEvents(
