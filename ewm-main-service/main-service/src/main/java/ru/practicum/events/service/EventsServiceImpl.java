@@ -6,6 +6,7 @@
     import jakarta.persistence.criteria.Predicate;
     import jakarta.persistence.criteria.Root;
     import jakarta.transaction.Transactional;
+    import jakarta.validation.ValidationException;
     import lombok.RequiredArgsConstructor;
     import lombok.extern.slf4j.Slf4j;
     import org.springframework.data.domain.Page;
@@ -23,6 +24,8 @@
     import ru.practicum.error.exception.ConflictException;
     import ru.practicum.error.exception.EventCreationRuleException;
     import ru.practicum.error.exception.NotFoundException;
+    import ru.practicum.events.moderation.ModerationCommentRepository;
+    import ru.practicum.events.moderation.ModerationComment;
     import ru.practicum.requests.RequestRepository;
     import ru.practicum.user.User;
     import ru.practicum.user.UserRepository;
@@ -48,6 +51,7 @@
         private final UserRepository userRepository;
         private final StatsClient statsClient;
         private final EntityManager entityManager;
+        private final ModerationCommentRepository moderationCommentRepository;
 
         @Override
         public EventFullDto saveEvent(NewEventDto newEventDto, Long userId) {
@@ -209,7 +213,18 @@
                         if (event.getState().equals(EventState.PUBLISHED)) {
                             throw new ConflictException("Cannot reject published event");
                         }
+
+                        if (request.getModerationComment() != null && !request.getModerationComment().trim().isEmpty()) {
+                            ModerationComment moderationComment = ModerationComment.builder()
+                                    .event(event)
+                                    .commentText(request.getModerationComment())
+                                    .createdOn(LocalDateTime.now())
+                                    .build();
+                            moderationCommentRepository.save(moderationComment);
+                        }
+
                         event.setState(EventState.CANCELED);
+                        event.setRequestModeration(false);
                     }
                 }
             }
@@ -218,11 +233,11 @@
 
             Event saved = eventRepository.save(event);
             saved.setConfirmedRequests(requestRepository.countByEventIdAndStatus(saved.getId(), EventState.CONFIRMED));
-
             setViewsToEvent(saved);
 
             return EventsMapper.toEventFullDto(saved);
         }
+
 
         /**
          * Валидирует дату события: проверяет, что она не раньше чем через MIN_HOURS_BEFORE_EVENT часов от текущего момента.

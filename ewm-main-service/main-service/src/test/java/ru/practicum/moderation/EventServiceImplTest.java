@@ -44,6 +44,7 @@ class EventServiceImplTest {
                 null,
                 null,
                 null,
+                null,
                 null);
     }
 
