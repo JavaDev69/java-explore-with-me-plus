@@ -4,31 +4,26 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.practicum.categories.CategoryDto;
+import ru.practicum.events.EventState;
 import ru.practicum.events.Location;
 import ru.practicum.events.dto.moderation.ModerationCommentShortDto;
-import ru.practicum.user.UserShortDto;
 
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 @Data
-public class EventFullDto {
+@NoArgsConstructor
+@AllArgsConstructor
+public class RepairEventDto {
     private Long id;
     private String annotation;
-    private CategoryDto category;
-    private Long confirmedRequests;
-    private String createdOn;
+    private Long category;
     private String description;
     private String eventDate;
-    private UserShortDto initiator;
     private Location location;
-    private Boolean paid;
-    private Integer participantLimit;
-    private String publishedOn;
-    private Boolean requestModeration;
-    private String state;
+    private Boolean paid = false;
+    private Integer participantLimit = 0;
+    private Boolean requestModeration = true;
     private String title;
-    private Long views;
+    private EventState state;
     private ModerationCommentShortDto lastModerationCommentDto;
 }
+

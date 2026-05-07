@@ -1,5 +1,6 @@
 package ru.practicum.events.service;
 
+import org.springframework.data.domain.Page;
 import ru.practicum.error.exception.ForbiddenActionException;
 import ru.practicum.error.exception.NotFoundException;
 import ru.practicum.events.dto.*;
@@ -59,6 +60,9 @@ public interface EventsService {
 
     List<EventFullDto> getUserEvents(Long userId, int from, int size);
 
+    Page<RepairEventDto> getUserModerationHistory(Long userId, int from, int size);
+
     EventFullDto getUserEventById(Long userId, Long eventId);
 
+    Page<EventFullDto> getEventsForModeration(int from, int size);
 }
