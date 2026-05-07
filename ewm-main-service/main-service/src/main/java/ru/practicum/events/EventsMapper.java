@@ -4,6 +4,8 @@ import ru.practicum.categories.Category;
 import ru.practicum.events.dto.EventFullDto;
 import ru.practicum.events.dto.EventShortDto;
 import ru.practicum.events.dto.NewEventDto;
+import ru.practicum.events.dto.RepairEventDto;
+import ru.practicum.events.dto.moderation.ModerationCommentShortDto;
 import ru.practicum.user.User;
 import ru.practicum.user.UserMapper;
 
@@ -75,6 +77,31 @@ public class EventsMapper {
                 .views(0L)
                 .build();
     }
+
+    /**
+     * Преобразует сущность Event в RepairEventDto.
+     *
+     * @param event сущность события
+     * @param moderationCommentShortDto комментарий модерации (может быть null)
+     * @return RepairEventDto
+     */
+    public static RepairEventDto toRepairEventDto(Event event, ModerationCommentShortDto moderationCommentShortDto) {
+        return RepairEventDto.builder()
+                .id(event.getId())
+                .annotation(event.getAnnotation())
+                .category(event.getCategory().getId())
+                .description(event.getDescription())
+                .eventDate(event.getEventDate().format(FORMATTER))
+                .location(new Location(event.getLocationLat(), event.getLocationLon()))
+                .paid(event.getPaid())
+                .participantLimit(event.getParticipantLimit())
+                .requestModeration(event.getRequestModeration())
+                .title(event.getTitle())
+                .state(event.getState())
+                .lastModerationCommentDto(moderationCommentShortDto)
+                .build();
+    }
+
 
     private static String format(LocalDateTime dateTime) {
         return dateTime != null ? dateTime.format(FORMATTER) : null;

@@ -6,10 +6,10 @@
     import jakarta.persistence.criteria.Predicate;
     import jakarta.persistence.criteria.Root;
     import jakarta.transaction.Transactional;
-    import jakarta.validation.ValidationException;
     import lombok.RequiredArgsConstructor;
     import lombok.extern.slf4j.Slf4j;
     import org.springframework.data.domain.Page;
+    import org.springframework.data.domain.PageImpl;
     import org.springframework.data.domain.PageRequest;
     import org.springframework.data.domain.Pageable;
     import org.springframework.data.jpa.domain.Specification;
@@ -24,8 +24,10 @@
     import ru.practicum.error.exception.ConflictException;
     import ru.practicum.error.exception.EventCreationRuleException;
     import ru.practicum.error.exception.NotFoundException;
+    import ru.practicum.events.dto.moderation.ModerationCommentShortDto;
     import ru.practicum.events.moderation.ModerationCommentRepository;
     import ru.practicum.events.moderation.ModerationComment;
+    import ru.practicum.events.moderation.ModerationMapper;
     import ru.practicum.requests.RequestRepository;
     import ru.practicum.user.User;
     import ru.practicum.user.UserRepository;
@@ -422,6 +424,7 @@
                 validateEventDate(updateDate);
             } else if (stateAction == StateAction.SEND_TO_REVIEW) {
                 validateEventDate(event.getEventDate());
+                event.setRequestModeration(true);
             }
 
             // 7. Сохраняем и возвращаем результат
@@ -495,6 +498,44 @@
             log.info("Найдено {} событий для пользователя с ID {}", events.size(), userId);
             return eventFullDtos;
         }
+
+        @Override
+        public Page<RepairEventDto> getUserModerationHistory(Long userId, int from, int size) {
+            Pageable pageable = PageRequest.of(from, size);
+            // Получаем сущности Event вместо RepairEventDto
+            Page<Event> events = eventRepository.findUserModerationHistory(userId, pageable);
+
+            List<Event> eventList = events.getContent();
+            List<RepairEventDto> repairEventDtos = new ArrayList<>();
+
+
+            if (!eventList.isEmpty()) {
+                List<Long> eventIds = eventList.stream()
+                        .map(Event::getId)
+                        .collect(Collectors.toList());
+
+                // Получаем последние комментарии модерации для событий
+                List<ModerationComment> moderationComments = moderationCommentRepository.findLastCommentsByEventIds(eventIds);
+
+                // Создаём маппинг: eventId → ModerationCommentShortDto
+                Map<Long, ModerationCommentShortDto> commentsMap = moderationComments.stream()
+                        .collect(Collectors.toMap(
+                                comment -> comment.getEvent().getId(),
+                                ModerationMapper::moderationCommentShortDto
+                        ));
+
+                // Преобразуем Event в RepairEventDto с комментариями модерации
+                repairEventDtos = eventList.stream()
+                        .map(event -> {
+                            ModerationCommentShortDto comment = commentsMap.get(event.getId());
+                            return EventsMapper.toRepairEventDto(event, comment);
+                        })
+                        .collect(Collectors.toList());
+            }
+
+            return new PageImpl<>(repairEventDtos, pageable, events.getTotalElements());
+        }
+
 
         @Override
         public EventFullDto getUserEventById(Long userId, Long eventId) {

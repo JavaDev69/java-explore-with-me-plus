@@ -6,6 +6,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import ru.practicum.events.dto.EventFullDto;
+import ru.practicum.events.dto.NewEventDto;
+import ru.practicum.events.dto.RepairEventDto;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -61,6 +64,17 @@ public interface EventsRepository extends JpaRepository<Event, Long>, JpaSpecifi
     Page<Event> findByRequestModerationAndState(
             @Param("requestModeration") Boolean requestModeration,
             @Param("state") EventState state,
+            Pageable pageable
+    );
+
+    @Query("SELECT e " +
+            "FROM Event e " +
+            "WHERE e.initiator.id = :userId " +
+            "AND (e.state = 'CANCELED' OR e.state = 'REJECTED') " +
+            "AND e.requestModeration = false " +
+            "ORDER BY e.eventDate DESC")
+    Page<Event> findUserModerationHistory(
+            @Param("userId") Long userId,
             Pageable pageable
     );
 
