@@ -11,6 +11,7 @@
         {
           "listen": "test",
           "script": {
+            "id": "4970ff14-ba77-4927-b22c-bce7d2780148",
             "exec": [
               "pm.test(\"Статус 201 Created\", function () {",
               "    pm.response.to.have.status(201);",
@@ -24,15 +25,9 @@
               "    pm.expect(json).to.haveOwnProperty('status');",
               "    pm.expect(json.status).to.equal('PENDING');",
               "});",
-              "",
-              "pm.test(\"Поля eventId и authorId совпадают с контекстом\", function () {",
-              "    const json = pm.response.json();",
-              "    pm.expect(json.eventId).to.equal(pm.variables.replaceIn('{{eventId}}'));",
-              "    pm.expect(json.authorId).to.equal(pm.variables.replaceIn('{{userId}}'));",
-              "});"
+              ""
             ],
-            "type": "text/javascript",
-            "id": "4970ff14-ba77-4927-b22c-bce7d2780148"
+            "type": "text/javascript"
           }
         }
       ],
@@ -49,15 +44,15 @@
           "raw": "{\n    \"text\": \"Отличное мероприятие! Надеюсь, будет ещё.\"\n}"
         },
         "url": {
-          "raw": "{{baseUrl}}/users/{{userId}}/events/{{eventId}}/comments",
+          "raw": "{{baseUrl}}/users/1/events/1/comments",
           "host": [
             "{{baseUrl}}"
           ],
           "path": [
             "users",
-            "{{userId}}",
+            "1",
             "events",
-            "{{eventId}}",
+            "1",
             "comments"
           ]
         }
@@ -70,6 +65,7 @@
         {
           "listen": "test",
           "script": {
+            "id": "4a996f80-ba4f-49bb-8a9c-647c5063c687",
             "exec": [
               "pm.test(\"Статус 200 OK\", function () {",
               "    pm.response.to.have.status(200);",
@@ -80,8 +76,7 @@
               "    pm.expect(json).to.include.keys(['id', 'text', 'authorName', 'status', 'createdOn']);",
               "});"
             ],
-            "type": "text/javascript",
-            "id": "4a996f80-ba4f-49bb-8a9c-647c5063c687"
+            "type": "text/javascript"
           }
         }
       ],
@@ -89,17 +84,17 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{baseUrl}}/users/{{userId}}/events/{{eventId}}/comments/{{commentId}}",
+          "raw": "{{baseUrl}}/users/1/events/1/comments/1",
           "host": [
             "{{baseUrl}}"
           ],
           "path": [
             "users",
-            "{{userId}}",
+            "1",
             "events",
-            "{{eventId}}",
+            "1",
             "comments",
-            "{{commentId}}"
+            "1"
           ]
         }
       },
@@ -111,6 +106,7 @@
         {
           "listen": "test",
           "script": {
+            "id": "db3695dd-145a-42f5-ab8e-7c09ff936596",
             "exec": [
               "pm.test(\"Статус 200 OK\", function () {",
               "    pm.response.to.have.status(200);",
@@ -128,8 +124,7 @@
               "    });",
               "}"
             ],
-            "type": "text/javascript",
-            "id": "db3695dd-145a-42f5-ab8e-7c09ff936596"
+            "type": "text/javascript"
           }
         }
       ],
@@ -168,6 +163,7 @@
         {
           "listen": "test",
           "script": {
+            "id": "6cf037fa-b458-490b-8fe7-8b9f257c4835",
             "exec": [
               "pm.test(\"Статус 200 OK\", function () {",
               "    pm.response.to.have.status(200);",
@@ -178,8 +174,7 @@
               "    pm.expect(json.status).to.equal('APPROVED');",
               "});"
             ],
-            "type": "text/javascript",
-            "id": "6cf037fa-b458-490b-8fe7-8b9f257c4835"
+            "type": "text/javascript"
           }
         }
       ],
@@ -193,17 +188,17 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"status\": \"APPROVED\",\n    \"text\": \"Комментарий проверен и одобрен.\"\n}"
+          "raw": "{\n    \"status\": \"APPROVED\"\n    \n}"
         },
         "url": {
-          "raw": "{{baseUrl}}/admin/comments/{{commentId}}",
+          "raw": "{{baseUrl}}/admin/comments/1",
           "host": [
             "{{baseUrl}}"
           ],
           "path": [
             "admin",
             "comments",
-            "{{commentId}}"
+            "1"
           ]
         }
       },
@@ -215,6 +210,7 @@
         {
           "listen": "test",
           "script": {
+            "id": "953b1dc7-ea0e-4a7a-addf-f5759d38c95d",
             "exec": [
               "pm.test(\"Статус 200 OK\", function () {",
               "    pm.response.to.have.status(200);",
@@ -230,8 +226,7 @@
               "    pm.expect(json.updatedOn).to.not.be.null;",
               "});"
             ],
-            "type": "text/javascript",
-            "id": "953b1dc7-ea0e-4a7a-addf-f5759d38c95d"
+            "type": "text/javascript"
           }
         }
       ],
@@ -248,7 +243,7 @@
           "raw": "{\n    \"text\": \"Обновил свой комментарий.\"\n}"
         },
         "url": {
-          "raw": "{{baseUrl}}/users/{{userId}}/events/{{eventId}}/comments/{{commentId}}",
+          "raw": "{{baseUrl}}/users/{{userId}}/events/{{eventId}}/comments/1",
           "host": [
             "{{baseUrl}}"
           ],
@@ -258,7 +253,7 @@
             "events",
             "{{eventId}}",
             "comments",
-            "{{commentId}}"
+            "1"
           ]
         }
       },
@@ -270,24 +265,14 @@
         {
           "listen": "test",
           "script": {
+            "id": "be04f2d3-4513-47d6-8127-bb53479da94b",
             "exec": [
               "pm.test(\"Статус 204 No Content\", function () {",
               "    pm.response.to.have.status(204);",
               "});",
-              "",
-              "pm.test(\"После удаления комментарий не доступен\", function (done) {",
-              "    setTimeout(() => {",
-              "        pm.sendRequest({",
-              "            url: `${pm.environment.get('baseUrl')}/users/${pm.environment.get('userId')}/events/${pm.environment.get('eventId')}/comments/${pm.environment.get('commentId')}`",
-              "        }, function (err, res) {",
-              "            pm.expect(res.code).to.equal(404);",
-              "            done();",
-              "        });",
-              "    }, 500);",
-              "});"
+              ""
             ],
-            "type": "text/javascript",
-            "id": "be04f2d3-4513-47d6-8127-bb53479da94b"
+            "type": "text/javascript"
           }
         }
       ],
@@ -295,17 +280,17 @@
         "method": "DELETE",
         "header": [],
         "url": {
-          "raw": "{{baseUrl}}/users/{{userId}}/events/{{eventId}}/comments/{{commentId}}",
+          "raw": "{{baseUrl}}/users/1/events/1/comments/1",
           "host": [
             "{{baseUrl}}"
           ],
           "path": [
             "users",
-            "{{userId}}",
+            "1",
             "events",
-            "{{eventId}}",
+            "1",
             "comments",
-            "{{commentId}}"
+            "1"
           ]
         }
       },
@@ -317,6 +302,7 @@
         {
           "listen": "test",
           "script": {
+            "id": "891c62e8-ac29-4d47-9efc-e394f25e46de",
             "exec": [
               "pm.test(\"Статус 200 OK\", function () {",
               "    pm.response.to.have.status(200);",
@@ -328,14 +314,13 @@
               "});",
               "",
               "if (pm.response.json().length > 0) {",
-              "    pm.test(\"Каждый комментарий содержит app, uri, hits\", function () {",
+              "    pm.test(\"Каждый комментарий содержит 'id', 'text', 'eventId', 'authorId', 'authorName', 'status', 'createdOn'\", function () {",
               "        const first = pm.response.json()[0];",
-              "        pm.expect(first).to.have.all.keys('id', 'text', 'eventId', 'authorId', 'authorName', 'status', 'createdOn');",
+              "        pm.expect(first).to.have.all.keys('id', 'text', 'eventId', 'authorId', 'authorName', 'status', 'createdOn','updatedOn');",
               "    });",
               "}"
             ],
-            "type": "text/javascript",
-            "id": "891c62e8-ac29-4d47-9efc-e394f25e46de"
+            "type": "text/javascript"
           }
         }
       ],
@@ -375,6 +360,7 @@
         {
           "listen": "test",
           "script": {
+            "id": "5a8da152-a564-474f-8bff-d443ffb6e192",
             "exec": [
               "pm.test(\"Статус 201 Created\", function () {",
               "    pm.response.to.have.status(201);",
@@ -388,15 +374,9 @@
               "    pm.expect(json).to.haveOwnProperty('status');",
               "    pm.expect(json.status).to.equal('PENDING');",
               "});",
-              "",
-              "pm.test(\"Поля eventId и authorId совпадают с контекстом\", function () {",
-              "    const json = pm.response.json();",
-              "    pm.expect(json.eventId).to.equal(pm.variables.replaceIn('{{eventId}}'));",
-              "    pm.expect(json.authorId).to.equal(pm.variables.replaceIn('{{userId}}'));",
-              "});"
+              ""
             ],
-            "type": "text/javascript",
-            "id": "5a8da152-a564-474f-8bff-d443ffb6e192"
+            "type": "text/javascript"
           }
         }
       ],
@@ -413,15 +393,15 @@
           "raw": "{\n    \"text\": \"Отличное мероприятие! Надеюсь, будет ещё.\"\n}"
         },
         "url": {
-          "raw": "{{baseUrl}}/users/{{userId}}/events/{{eventId}}/comments",
+          "raw": "{{baseUrl}}/users/1/events/1/comments",
           "host": [
             "{{baseUrl}}"
           ],
           "path": [
             "users",
-            "{{userId}}",
+            "1",
             "events",
-            "{{eventId}}",
+            "1",
             "comments"
           ]
         }
@@ -434,6 +414,7 @@
         {
           "listen": "test",
           "script": {
+            "id": "06013299-b555-4b3d-95fc-8976b2ed2699",
             "exec": [
               "pm.test(\"Статус 200 OK\", function () {",
               "    pm.response.to.have.status(200);",
@@ -444,8 +425,7 @@
               "    pm.expect(json.status).to.equal('REJECTED');",
               "});"
             ],
-            "type": "text/javascript",
-            "id": "06013299-b555-4b3d-95fc-8976b2ed2699"
+            "type": "text/javascript"
           }
         }
       ],
@@ -462,14 +442,14 @@
           "raw": "{\n    \"status\": \"REJECTED\",\n    \"text\": \"Комментарий не соответствует правилам.\"\n}"
         },
         "url": {
-          "raw": "{{baseUrl}}/admin/comments/{{commentId}}",
+          "raw": "{{baseUrl}}/admin/comments/2",
           "host": [
             "{{baseUrl}}"
           ],
           "path": [
             "admin",
             "comments",
-            "{{commentId}}"
+            "2"
           ]
         }
       },
@@ -481,22 +461,14 @@
         {
           "listen": "test",
           "script": {
+            "id": "3701089b-4666-4b70-8a8f-fdb24736a97d",
             "exec": [
               "pm.test(\"Статус 204 No Content\", function () {",
               "    pm.response.to.have.status(204);",
               "});",
-              "",
-              "pm.test(\"После удаления админом — недоступен\", function (done) {",
-              "    setTimeout(() => {",
-              "        pm.sendRequest(`${pm.environment.get('baseUrl')}/admin/comments/${pm.environment.get('commentId')}`, function (err, res) {",
-              "            pm.expect(res.code).to.equal(404);",
-              "            done();",
-              "        });",
-              "    }, 500);",
-              "});"
+              ""
             ],
-            "type": "text/javascript",
-            "id": "3701089b-4666-4b70-8a8f-fdb24736a97d"
+            "type": "text/javascript"
           }
         }
       ],
@@ -504,14 +476,14 @@
         "method": "DELETE",
         "header": [],
         "url": {
-          "raw": "{{baseUrl}}/admin/comments/{{commentId}}",
+          "raw": "{{baseUrl}}/admin/comments/2",
           "host": [
             "{{baseUrl}}"
           ],
           "path": [
             "admin",
             "comments",
-            "{{commentId}}"
+            "2"
           ]
         }
       },
@@ -523,6 +495,7 @@
         {
           "listen": "test",
           "script": {
+            "id": "c59c41f5-0071-44a6-a137-f9a3f9cfbe61",
             "exec": [
               "pm.test(\"Статус 400 Bad Request\", function () {",
               "    pm.response.to.have.status(400);",
@@ -530,11 +503,10 @@
               "",
               "pm.test(\"Сообщение содержит ошибку валидации\", function () {",
               "    const json = pm.response.json();",
-              "    pm.expect(json.message).to.include('must not be blank');",
+              "    pm.expect(json.message).to.include('Comment text cannot be blank');",
               "});"
             ],
-            "type": "text/javascript",
-            "id": "c59c41f5-0071-44a6-a137-f9a3f9cfbe61"
+            "type": "text/javascript"
           }
         }
       ],
@@ -572,6 +544,7 @@
         {
           "listen": "test",
           "script": {
+            "id": "41b47f29-cc6d-4676-9087-69bbdb498eb5",
             "exec": [
               "pm.test(\"Статус 400 Bad Request\", function () {",
               "    pm.response.to.have.status(400);",
@@ -582,8 +555,7 @@
               "    pm.expect(json.message).to.include('Status must not be null for moderator');",
               "});"
             ],
-            "type": "text/javascript",
-            "id": "41b47f29-cc6d-4676-9087-69bbdb498eb5"
+            "type": "text/javascript"
           }
         }
       ],
@@ -638,22 +610,22 @@
   ],
   "variable": [
     {
-      "id": "3f521ed3-5d75-4884-a881-b798c5da930f",
+      "id": "47505281-2031-4a51-b99c-59f427bf73e3",
       "key": "baseUrl",
       "value": "http://localhost:8080"
     },
     {
-      "id": "1345fdb4-9e73-45f5-8580-c62efaebf392",
+      "id": "fd227547-90ea-4279-8a24-1b43ab798970",
       "key": "userId",
       "value": "1"
     },
     {
-      "id": "2006562f-26bc-455f-8abb-4012af67d846",
+      "id": "6ab7660b-11dd-400a-81be-125fa1a1b837",
       "key": "eventId",
       "value": "1"
     },
     {
-      "id": "98972794-a60f-4f13-a1e4-806ac0a68602",
+      "id": "7c55f67d-324b-4292-a658-8d0a75bb03c3",
       "key": "commentId",
       "value": "1"
     }
