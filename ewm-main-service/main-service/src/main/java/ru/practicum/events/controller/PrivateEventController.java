@@ -77,12 +77,12 @@ public class PrivateEventController {
 
     @GetMapping("/moderation")
     @ResponseStatus(HttpStatus.OK)
-    public Page<RepairEventDto> getUserModerationHistory(
+    public Page<EventFullDto> getUserModerationHistory(
             @PathVariable Long userId,
             @RequestParam(defaultValue = "0") Integer from,
             @RequestParam(defaultValue = "10") Integer size
     ) {
-        Page<RepairEventDto> events = eventsService.getUserModerationHistory(userId, from, size);
+        Page<EventFullDto> events = eventsService.getUserModerationHistory(userId, from, size);
         return events;
     }
 

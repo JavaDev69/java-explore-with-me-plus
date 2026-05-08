@@ -37,6 +37,7 @@
     import java.util.Collections;
     import java.util.List;
     import java.util.Map;
+    import java.util.function.Function;
     import java.util.stream.Collectors;
 
     import static ru.practicum.events.EventsMapper.*;
@@ -500,13 +501,13 @@
         }
 
         @Override
-        public Page<RepairEventDto> getUserModerationHistory(Long userId, int from, int size) {
+        public Page<EventFullDto> getUserModerationHistory(Long userId, int from, int size) {
             Pageable pageable = PageRequest.of(from, size);
-            // Получаем сущности Event вместо RepairEventDto
+
             Page<Event> events = eventRepository.findUserModerationHistory(userId, pageable);
 
             List<Event> eventList = events.getContent();
-            List<RepairEventDto> repairEventDtos = new ArrayList<>();
+            List<EventFullDto> fullEventDtos = new ArrayList<>();
 
 
             if (!eventList.isEmpty()) {
@@ -517,23 +518,22 @@
                 // Получаем последние комментарии модерации для событий
                 List<ModerationComment> moderationComments = moderationCommentRepository.findLastCommentsByEventIds(eventIds);
 
-                // Создаём маппинг: eventId → ModerationCommentShortDto
-                Map<Long, ModerationCommentShortDto> commentsMap = moderationComments.stream()
+                // Создаём маппинг: eventId → ModerationComment
+                Map<Long, ModerationComment> commentsMap = moderationComments.stream()
                         .collect(Collectors.toMap(
                                 comment -> comment.getEvent().getId(),
-                                ModerationMapper::moderationCommentShortDto
+                                Function.identity()
                         ));
 
-                // Преобразуем Event в RepairEventDto с комментариями модерации
-                repairEventDtos = eventList.stream()
+                fullEventDtos = eventList.stream()
                         .map(event -> {
-                            ModerationCommentShortDto comment = commentsMap.get(event.getId());
-                            return EventsMapper.toRepairEventDto(event, comment);
+                            ModerationComment comment = commentsMap.get(event.getId());
+                            return EventsMapper.toEventFullDto(event, comment);
                         })
                         .collect(Collectors.toList());
             }
 
-            return new PageImpl<>(repairEventDtos, pageable, events.getTotalElements());
+            return new PageImpl<>(fullEventDtos, pageable, events.getTotalElements());
         }
 
 

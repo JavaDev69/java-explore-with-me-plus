@@ -6,6 +6,7 @@ import ru.practicum.events.dto.EventShortDto;
 import ru.practicum.events.dto.NewEventDto;
 import ru.practicum.events.dto.RepairEventDto;
 import ru.practicum.events.dto.moderation.ModerationCommentShortDto;
+import ru.practicum.events.moderation.ModerationComment;
 import ru.practicum.user.User;
 import ru.practicum.user.UserMapper;
 
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 
 import static ru.practicum.categories.CategoryMapper.toCategoryDto;
 import static ru.practicum.common.Constance.FORMATTER;
+import static ru.practicum.events.moderation.ModerationMapper.moderationCommentShortDto;
 
 public class EventsMapper {
 
@@ -51,6 +53,13 @@ public class EventsMapper {
         return dto;
     }
 
+    public static EventFullDto toEventFullDto(Event event, ModerationComment mc) {
+        EventFullDto dto = toEventFullDto(event);
+        if (mc != null) {
+            dto.setLastModerationCommentDto(moderationCommentShortDto(mc));
+        }
+        return dto;
+    }
     /**
      * Преобразует DTO нового события в сущность Event.
      *
@@ -77,31 +86,6 @@ public class EventsMapper {
                 .views(0L)
                 .build();
     }
-
-    /**
-     * Преобразует сущность Event в RepairEventDto.
-     *
-     * @param event сущность события
-     * @param moderationCommentShortDto комментарий модерации (может быть null)
-     * @return RepairEventDto
-     */
-    public static RepairEventDto toRepairEventDto(Event event, ModerationCommentShortDto moderationCommentShortDto) {
-        return RepairEventDto.builder()
-                .id(event.getId())
-                .annotation(event.getAnnotation())
-                .category(event.getCategory().getId())
-                .description(event.getDescription())
-                .eventDate(event.getEventDate().format(FORMATTER))
-                .location(new Location(event.getLocationLat(), event.getLocationLon()))
-                .paid(event.getPaid())
-                .participantLimit(event.getParticipantLimit())
-                .requestModeration(event.getRequestModeration())
-                .title(event.getTitle())
-                .state(event.getState())
-                .lastModerationCommentDto(moderationCommentShortDto)
-                .build();
-    }
-
 
     private static String format(LocalDateTime dateTime) {
         return dateTime != null ? dateTime.format(FORMATTER) : null;

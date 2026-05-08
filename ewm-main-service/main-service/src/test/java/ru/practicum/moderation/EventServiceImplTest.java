@@ -14,6 +14,7 @@ import ru.practicum.events.Event;
 import ru.practicum.events.EventState;
 import ru.practicum.events.EventsRepository;
 import ru.practicum.events.Location;
+import ru.practicum.events.dto.EventFullDto;
 import ru.practicum.events.dto.RepairEventDto;
 import ru.practicum.events.moderation.ModerationComment;
 import ru.practicum.events.moderation.ModerationCommentRepository;
@@ -49,7 +50,7 @@ class EventServiceImplTest {
     private static final int SIZE = 10;
 
     @Test
-    void shouldReturnRepairEventDtosWithCommentsWhenEventsExist() {
+    void shouldReturnEventFullDtosWithCommentsWhenEventsExist() {
         // Given
         Pageable pageable = PageRequest.of(FROM, SIZE);
         List<Event> events = createTestEvents();
@@ -63,21 +64,21 @@ class EventServiceImplTest {
         when(moderationCommentRepository.findLastCommentsByEventIds(anyList())).thenReturn(moderationComments);
 
         // When
-        Page<RepairEventDto> result = eventService.getUserModerationHistory(USER_ID, FROM, SIZE);
+        Page<EventFullDto> result = eventService.getUserModerationHistory(USER_ID, FROM, SIZE);
 
         // Then
         assertThat(result).isNotNull();
         assertThat(result.getContent()).hasSize(2);
         assertThat(result.getTotalElements()).isEqualTo(2);
 
-        RepairEventDto firstEvent = result.getContent().get(0);
-        RepairEventDto secondEvent = result.getContent().get(1);
+        EventFullDto firstEvent = result.getContent().get(0);
+        EventFullDto secondEvent = result.getContent().get(1);
 
         // Проверяем поля RepairEventDto
         assertThat(firstEvent.getId()).isEqualTo(1L);
         assertThat(firstEvent.getAnnotation()).isEqualTo("Test annotation 1");
-        assertThat(firstEvent.getCategory()).isEqualTo(100L);
-        assertThat(firstEvent.getState()).isEqualTo(EventState.CANCELED);
+        assertThat(firstEvent.getCategory().getId()).isEqualTo(100L);
+        assertThat(firstEvent.getState()).isEqualTo(EventState.CANCELED.name());
 
         // Проверяем комментарии модерации
         assertThat(firstEvent.getLastModerationCommentDto()).isNotNull();
@@ -95,7 +96,7 @@ class EventServiceImplTest {
         when(eventRepository.findUserModerationHistory(USER_ID, pageable)).thenReturn(emptyPage);
 
         // When
-        Page<RepairEventDto> result = eventService.getUserModerationHistory(USER_ID, FROM, SIZE);
+        Page<EventFullDto> result = eventService.getUserModerationHistory(USER_ID, FROM, SIZE);
 
         // Then
         assertThat(result).isNotNull();
@@ -114,12 +115,12 @@ class EventServiceImplTest {
         when(moderationCommentRepository.findLastCommentsByEventIds(anyList())).thenReturn(Collections.emptyList());
 
         // When
-        Page<RepairEventDto> result = eventService.getUserModerationHistory(USER_ID, FROM, SIZE);
+        Page<EventFullDto> result = eventService.getUserModerationHistory(USER_ID, FROM, SIZE);
 
         // Then
         assertThat(result).isNotNull();
         assertThat(result.getContent()).hasSize(1);
-        RepairEventDto eventDto = result.getContent().get(0);
+        EventFullDto eventDto = result.getContent().get(0);
         assertThat(eventDto.getLastModerationCommentDto()).isNull();
     }
 
@@ -143,7 +144,7 @@ class EventServiceImplTest {
                 .thenReturn(createTestModerationCommentsForEvents(pageEvents));
 
         // When
-        Page<RepairEventDto> result = eventService.getUserModerationHistory(USER_ID, 1, 5);
+        Page<EventFullDto> result = eventService.getUserModerationHistory(USER_ID, 1, 5);
 
         // Then
         assertThat(result).isNotNull();
@@ -175,7 +176,7 @@ class EventServiceImplTest {
                 .thenReturn(Collections.emptyList());
 
         // When
-        Page<RepairEventDto> result = eventService.getUserModerationHistory(USER_ID, FROM, SIZE);
+        Page<EventFullDto> result = eventService.getUserModerationHistory(USER_ID, FROM, SIZE);
 
         // Then
         assertThat(result).isNotNull();
