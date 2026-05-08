@@ -163,6 +163,53 @@
       "response": []
     },
     {
+      "name": "[Admin] Модерация: одобрить комментарий",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Статус 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Статус изменён на APPROVED\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.status).to.equal('APPROVED');",
+              "});"
+            ],
+            "type": "text/javascript",
+            "id": "6cf037fa-b458-490b-8fe7-8b9f257c4835"
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"status\": \"APPROVED\",\n    \"text\": \"Комментарий проверен и одобрен.\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/admin/comments/{{commentId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "admin",
+            "comments",
+            "{{commentId}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
       "name": "[User] Обновить свой комментарий",
       "event": [
         {
@@ -323,28 +370,38 @@
       "response": []
     },
     {
-      "name": "[Admin] Модерация: одобрить комментарий",
+      "name": "[User] Добавить комментарий к событию Copy",
       "event": [
         {
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test(\"Статус 200 OK\", function () {",
-              "    pm.response.to.have.status(200);",
+              "pm.test(\"Статус 201 Created\", function () {",
+              "    pm.response.to.have.status(201);",
               "});",
               "",
-              "pm.test(\"Статус изменён на APPROVED\", function () {",
+              "pm.test(\"Тело ответа содержит id, text, authorName, status\", function () {",
               "    const json = pm.response.json();",
-              "    pm.expect(json.status).to.equal('APPROVED');",
+              "    pm.expect(json).to.haveOwnProperty('id');",
+              "    pm.expect(json).to.haveOwnProperty('text');",
+              "    pm.expect(json).to.haveOwnProperty('authorName');",
+              "    pm.expect(json).to.haveOwnProperty('status');",
+              "    pm.expect(json.status).to.equal('PENDING');",
+              "});",
+              "",
+              "pm.test(\"Поля eventId и authorId совпадают с контекстом\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.eventId).to.equal(pm.variables.replaceIn('{{eventId}}'));",
+              "    pm.expect(json.authorId).to.equal(pm.variables.replaceIn('{{userId}}'));",
               "});"
             ],
             "type": "text/javascript",
-            "id": "6cf037fa-b458-490b-8fe7-8b9f257c4835"
+            "id": "5a8da152-a564-474f-8bff-d443ffb6e192"
           }
         }
       ],
       "request": {
-        "method": "PATCH",
+        "method": "POST",
         "header": [
           {
             "key": "Content-Type",
@@ -353,17 +410,19 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"status\": \"APPROVED\",\n    \"text\": \"Комментарий проверен и одобрен.\"\n}"
+          "raw": "{\n    \"text\": \"Отличное мероприятие! Надеюсь, будет ещё.\"\n}"
         },
         "url": {
-          "raw": "{{baseUrl}}/admin/comments/{{commentId}}",
+          "raw": "{{baseUrl}}/users/{{userId}}/events/{{eventId}}/comments",
           "host": [
             "{{baseUrl}}"
           ],
           "path": [
-            "admin",
-            "comments",
-            "{{commentId}}"
+            "users",
+            "{{userId}}",
+            "events",
+            "{{eventId}}",
+            "comments"
           ]
         }
       },
@@ -579,22 +638,22 @@
   ],
   "variable": [
     {
-      "id": "2d1397ba-bb3e-4e0b-87d8-343852312091",
+      "id": "3f521ed3-5d75-4884-a881-b798c5da930f",
       "key": "baseUrl",
       "value": "http://localhost:8080"
     },
     {
-      "id": "f6b9c522-131e-45b9-af82-2af803f1c103",
+      "id": "1345fdb4-9e73-45f5-8580-c62efaebf392",
       "key": "userId",
       "value": "1"
     },
     {
-      "id": "37baeefa-f119-4907-8886-19ec1cc3573c",
+      "id": "2006562f-26bc-455f-8abb-4012af67d846",
       "key": "eventId",
       "value": "1"
     },
     {
-      "id": "92a4cb01-dfde-4f6b-91a7-970e223f1826",
+      "id": "98972794-a60f-4f13-a1e4-806ac0a68602",
       "key": "commentId",
       "value": "1"
     }

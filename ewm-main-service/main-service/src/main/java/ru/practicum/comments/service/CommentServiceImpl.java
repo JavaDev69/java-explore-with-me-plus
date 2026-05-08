@@ -103,7 +103,7 @@ public class CommentServiceImpl implements CommentService {
         if (!comment.getAuthor().getId().equals(userId)) {
             throw new IllegalArgumentException("You can only delete your own comments");
         }
-        if (comment.getStatus() != CommentStatus.PENDING || comment.getStatus() != CommentStatus.APPROVED) {
+        if (comment.getStatus() == CommentStatus.REJECTED) {
             throw new IllegalArgumentException("Cannot delete rejected comment");
         }
 
