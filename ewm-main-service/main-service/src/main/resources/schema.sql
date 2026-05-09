@@ -39,6 +39,15 @@ CREATE TABLE IF NOT EXISTS requests (
     UNIQUE (event_id, requester_id)
 );
 
+CREATE TABLE IF NOT EXISTS subscriptions (
+    id BIGSERIAL PRIMARY KEY,
+    subscriber_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    publisher_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_on TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW(),
+    UNIQUE (subscriber_id, publisher_id),
+    CHECK (subscriber_id <> publisher_id)
+);
+
 CREATE TABLE IF NOT EXISTS compilations (
     id BIGSERIAL PRIMARY KEY,
     title VARCHAR(50) NOT NULL UNIQUE,
