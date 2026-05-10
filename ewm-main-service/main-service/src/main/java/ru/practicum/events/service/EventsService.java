@@ -60,9 +60,9 @@ public interface EventsService {
 
     List<EventFullDto> getUserEvents(Long userId, int from, int size);
 
-    Page<EventFullDto> getUserModerationHistory(Long userId, int from, int size);
+    List<EventFullDto> getUserModerationHistory(Long userId, int from, int size);
 
     EventFullDto getUserEventById(Long userId, Long eventId);
 
-    Page<EventFullDto> getEventsForModeration(int from, int size);
+    List<EventFullDto> getEventsForModeration(int from, int size);
 }

@@ -17,7 +17,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/admin/events")
+    @RequestMapping("/admin/events")
 @RequiredArgsConstructor
 public class AdminEventsController {
 
@@ -48,18 +48,15 @@ public class AdminEventsController {
 
     @GetMapping("/moderation")
     @ResponseStatus(HttpStatus.OK)
-    public Page<EventFullDto> getEventsForModeration(
+    public List<EventFullDto> getEventsForModeration(
             @RequestParam(defaultValue = "0") Integer from,
             @RequestParam(defaultValue = "10") Integer size
     ) {
         log.info("Получен запрос на получение списка событий для модерации. Параметры: from={}, size={}", from, size);
 
-        Page<EventFullDto> events = adminEventService.getEventsForModeration(from, size);
+        List<EventFullDto> events = adminEventService.getEventsForModeration(from, size);
 
-        log.info("Получен список событий для модерации. Количество элементов: {}, текущая страница: {}, всего страниц: {}",
-                events.getNumberOfElements(),
-                events.getNumber(),
-                events.getTotalPages());
+        log.info("Получен список событий для модерации. Количество элементов: {}", events.size());
 
         return events;
     }

@@ -7,11 +7,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.events.dto.EventFullDto;
 import ru.practicum.events.dto.NewEventDto;
-import ru.practicum.events.dto.RepairEventDto;
 import ru.practicum.events.dto.UpdateEventUserRequest;
 import ru.practicum.events.service.EventsService;
 
@@ -77,12 +75,12 @@ public class PrivateEventController {
 
     @GetMapping("/moderation")
     @ResponseStatus(HttpStatus.OK)
-    public Page<EventFullDto> getUserModerationHistory(
+    public List<EventFullDto> getUserModerationHistory(
             @PathVariable Long userId,
             @RequestParam(defaultValue = "0") Integer from,
             @RequestParam(defaultValue = "10") Integer size
     ) {
-        Page<EventFullDto> events = eventsService.getUserModerationHistory(userId, from, size);
+        List<EventFullDto> events = eventsService.getUserModerationHistory(userId, from, size);
         return events;
     }
 

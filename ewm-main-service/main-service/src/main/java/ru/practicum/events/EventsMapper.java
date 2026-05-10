@@ -4,8 +4,6 @@ import ru.practicum.categories.Category;
 import ru.practicum.events.dto.EventFullDto;
 import ru.practicum.events.dto.EventShortDto;
 import ru.practicum.events.dto.NewEventDto;
-import ru.practicum.events.dto.RepairEventDto;
-import ru.practicum.events.dto.moderation.ModerationCommentShortDto;
 import ru.practicum.events.moderation.ModerationComment;
 import ru.practicum.user.User;
 import ru.practicum.user.UserMapper;

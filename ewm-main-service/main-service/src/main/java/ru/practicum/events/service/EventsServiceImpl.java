@@ -74,13 +74,15 @@
             return toEventFullDto(savedEvent);
         }
 
-        public Page<EventFullDto> getEventsForModeration(int from, int size) {
-            Pageable pageable = PageRequest.of(from, size);
-            Page<Event> events = eventRepository.findByRequestModerationAndState(
+        @Override
+        public List<EventFullDto> getEventsForModeration(int page, int limit) {
+            Pageable pageable = PageRequest.of(page, limit);
+            List<Event> events = eventRepository.findByRequestModerationAndState(
                     Boolean.TRUE, EventState.PENDING, pageable
             );
-
-            return events.map(EventsMapper::toEventFullDto);
+            return events.stream()
+                    .map(EventsMapper::toEventFullDto)
+                    .collect(Collectors.toList());
         }
 
         @Override
@@ -501,14 +503,12 @@
         }
 
         @Override
-        public Page<EventFullDto> getUserModerationHistory(Long userId, int from, int size) {
-            Pageable pageable = PageRequest.of(from, size);
+        public List<EventFullDto> getUserModerationHistory(Long userId, int page, int limit) {
 
-            Page<Event> events = eventRepository.findUserModerationHistory(userId, pageable);
+            Pageable pageable = PageRequest.of(page, limit);
 
-            List<Event> eventList = events.getContent();
+            List<Event> eventList = eventRepository.findUserModerationHistory(userId, pageable);
             List<EventFullDto> fullEventDtos = new ArrayList<>();
-
 
             if (!eventList.isEmpty()) {
                 List<Long> eventIds = eventList.stream()
@@ -517,7 +517,6 @@
 
                 // Получаем последние комментарии модерации для событий
                 List<ModerationComment> moderationComments = moderationCommentRepository.findLastCommentsByEventIds(eventIds);
-
                 // Создаём маппинг: eventId → ModerationComment
                 Map<Long, ModerationComment> commentsMap = moderationComments.stream()
                         .collect(Collectors.toMap(
@@ -533,8 +532,9 @@
                         .collect(Collectors.toList());
             }
 
-            return new PageImpl<>(fullEventDtos, pageable, events.getTotalElements());
+            return fullEventDtos;
         }
+
 
 
         @Override

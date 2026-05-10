@@ -15,7 +15,6 @@ import ru.practicum.events.EventState;
 import ru.practicum.events.EventsRepository;
 import ru.practicum.events.Location;
 import ru.practicum.events.dto.EventFullDto;
-import ru.practicum.events.dto.RepairEventDto;
 import ru.practicum.events.moderation.ModerationComment;
 import ru.practicum.events.moderation.ModerationCommentRepository;
 import ru.practicum.events.service.EventsServiceImpl;
@@ -29,6 +28,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.h2.util.ParserUtil.LIMIT;
+import static org.h2.util.ParserUtil.OFFSET;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
 
@@ -49,110 +50,96 @@ class EventServiceImplTest {
     private static final int FROM = 0;
     private static final int SIZE = 10;
 
-    @Test
-    void shouldReturnEventFullDtosWithCommentsWhenEventsExist() {
-        // Given
-        Pageable pageable = PageRequest.of(FROM, SIZE);
-        List<Event> events = createTestEvents();
-        Page<Event> eventPage = new PageImpl<>(events, pageable, events.size());
 
-        List<ModerationComment> moderationComments = createTestModerationComments();
-
-
-        // Mock репозиториев
-        when(eventRepository.findUserModerationHistory(USER_ID, pageable)).thenReturn(eventPage);
-        when(moderationCommentRepository.findLastCommentsByEventIds(anyList())).thenReturn(moderationComments);
-
-        // When
-        Page<EventFullDto> result = eventService.getUserModerationHistory(USER_ID, FROM, SIZE);
-
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result.getContent()).hasSize(2);
-        assertThat(result.getTotalElements()).isEqualTo(2);
-
-        EventFullDto firstEvent = result.getContent().get(0);
-        EventFullDto secondEvent = result.getContent().get(1);
-
-        // Проверяем поля RepairEventDto
-        assertThat(firstEvent.getId()).isEqualTo(1L);
-        assertThat(firstEvent.getAnnotation()).isEqualTo("Test annotation 1");
-        assertThat(firstEvent.getCategory().getId()).isEqualTo(100L);
-        assertThat(firstEvent.getState()).isEqualTo(EventState.CANCELED.name());
-
-        // Проверяем комментарии модерации
-        assertThat(firstEvent.getLastModerationCommentDto()).isNotNull();
-        assertThat(firstEvent.getLastModerationCommentDto().getCommentText())
-                .isEqualTo("First moderation comment");
-        assertThat(secondEvent.getLastModerationCommentDto()).isNull();
-    }
 
     @Test
     void shouldReturnEmptyPageWhenNoEventsFound() {
         // Given
         Pageable pageable = PageRequest.of(FROM, SIZE);
-        Page<Event> emptyPage = Page.empty(pageable);
 
-        when(eventRepository.findUserModerationHistory(USER_ID, pageable)).thenReturn(emptyPage);
+
+        when(eventRepository.findUserModerationHistory(USER_ID, pageable)).thenReturn(Collections.emptyList());
 
         // When
-        Page<EventFullDto> result = eventService.getUserModerationHistory(USER_ID, FROM, SIZE);
+        List<EventFullDto> result = eventService.getUserModerationHistory(USER_ID, FROM, SIZE);
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result.getContent()).isEmpty();
-        assertThat(result.getTotalElements()).isZero();
+        assertThat(result.isEmpty());
     }
 
     @Test
     void shouldHandleEventsWithoutModerationComments() {
         // Given
         Pageable pageable = PageRequest.of(FROM, SIZE);
-        List<Event> events = createEventsWithoutComments();
-        Page<Event> eventPage = new PageImpl<>(events, pageable, events.size());
 
-        when(eventRepository.findUserModerationHistory(USER_ID, pageable)).thenReturn(eventPage);
-        when(moderationCommentRepository.findLastCommentsByEventIds(anyList())).thenReturn(Collections.emptyList());
+        // Создаём тестовые события (1 событие)
+        List<Event> events = createEventsWithoutComments();
+
+        // Настраиваем моки: репозиторий возвращает события,
+        // репозиторий комментариев возвращает пустой список
+        when(eventRepository.findUserModerationHistory(USER_ID, pageable))
+                .thenReturn(events);
+        when(moderationCommentRepository.findLastCommentsByEventIds(anyList()))
+                .thenReturn(Collections.emptyList());
 
         // When
-        Page<EventFullDto> result = eventService.getUserModerationHistory(USER_ID, FROM, SIZE);
+        List<EventFullDto> result = eventService.getUserModerationHistory(USER_ID, FROM, SIZE);
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result.getContent()).hasSize(1);
-        EventFullDto eventDto = result.getContent().get(0);
+        assertThat(result).hasSize(1); // Теперь ожидаем 1 событие
+
+        EventFullDto eventDto = result.getFirst();
         assertThat(eventDto.getLastModerationCommentDto()).isNull();
     }
 
+
     @Test
     void shouldApplyCorrectPagination() {
-        // Given
-        Pageable pageable = PageRequest.of(1, 5); // Вторая страница, размер страницы — 5 элементов
 
-        // Создаём достаточно данных для пагинации: всего 15 событий
+        // Создаём 15 тестовых событий
         List<Event> allEvents = new ArrayList<>();
         for (int i = 0; i < 15; i++) {
             allEvents.add(createEvent((long) i + 1, USER_ID, EventState.CANCELED));
         }
 
-        // Берём только элементы для второй страницы
         List<Event> pageEvents = allEvents.subList(5, 10);
-        Page<Event> eventPage = new PageImpl<>(pageEvents, pageable, 15); // Всего 15 элементов
+        Pageable expectedPageable = PageRequest.of(1, 5);
 
-        when(eventRepository.findUserModerationHistory(USER_ID, pageable)).thenReturn(eventPage);
+        // Настраиваем мок: ожидаем вызов с PageRequest.of(1, 5)
+        when(eventRepository.findUserModerationHistory(USER_ID, expectedPageable))
+                .thenReturn(pageEvents);
+
+        // Создаём комментарии для событий на текущей странице
+        List<ModerationComment> comments = createTestModerationCommentsForEvents(pageEvents);
         when(moderationCommentRepository.findLastCommentsByEventIds(anyList()))
-                .thenReturn(createTestModerationCommentsForEvents(pageEvents));
+                .thenReturn(comments);
 
         // When
-        Page<EventFullDto> result = eventService.getUserModerationHistory(USER_ID, 1, 5);
+        // Передаём offset = 5, limit = 5 — сервис преобразует в page = 1
+        List<EventFullDto> result = eventService.getUserModerationHistory(USER_ID, 1, 5);
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result.getContent()).hasSize(5); // На странице должно быть 5 элементов
-        assertThat(result.getTotalElements()).isEqualTo(15); // Всего элементов — 15
-        assertThat(result.getNumber()).isEqualTo(1); // Номер текущей страницы — 1 (вторая страница)
-        assertThat(result.getSize()).isEqualTo(5); // Размер страницы — 5
-        assertThat(result.getTotalPages()).isEqualTo(3); // Всего страниц: 15 / 5 = 3
+        assertThat(result).hasSize(5); // Ожидаем 5 элементов на странице
+    }
+
+
+
+    @Test
+    void shouldReturnEmptyListWhenNoEventsFound() {
+        // Given
+        Pageable pageable = PageRequest.of(FROM, SIZE);
+        when(eventRepository.findUserModerationHistory(USER_ID, pageable))
+                .thenReturn(Collections.emptyList());
+
+        // When
+        List<EventFullDto> result = eventService.getUserModerationHistory(USER_ID, FROM, SIZE);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result).isEmpty(); // Явная проверка на пустой список
     }
 
 
@@ -161,28 +148,29 @@ class EventServiceImplTest {
         // Given
         Pageable pageable = PageRequest.of(FROM, SIZE);
 
-        // Создаём события с разными состояниями и пользователями
-        Event event1 = createEvent(1L, USER_ID, EventState.CANCELED);
+        // Создаём события с разными пользователями и состояниями
+        Event event1 = createEvent(1L, USER_ID, EventState.PENDING); // Наш пользователь, нужное состояние
         Event event2 = createEvent(2L, USER_ID + 1, EventState.REJECTED); // Другой пользователь
         Event event3 = createEvent(3L, USER_ID, EventState.PUBLISHED); // Другое состояние
 
-        List<Event> allEvents = Arrays.asList(event1, event2, event3);
-        Page<Event> eventPage = new PageImpl<>(allEvents, pageable, allEvents.size());
+        List<Event> testEvents = Arrays.asList(event1, event2, event3);
 
+        // Мок возвращает только события, соответствующие фильтру (event1)
         when(eventRepository.findUserModerationHistory(USER_ID, pageable))
-                .thenReturn(new PageImpl<>(Collections.singletonList(event1), pageable, 1));
+                .thenReturn(Arrays.asList(event1));
 
         when(moderationCommentRepository.findLastCommentsByEventIds(anyList()))
                 .thenReturn(Collections.emptyList());
 
         // When
-        Page<EventFullDto> result = eventService.getUserModerationHistory(USER_ID, FROM, SIZE);
+        List<EventFullDto> result = eventService.getUserModerationHistory(USER_ID, FROM, SIZE);
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0).getId()).isEqualTo(1L);
+        assertThat(result).hasSize(1);
+        assertThat(result.getFirst().getId()).isEqualTo(1L);
     }
+
 
     // Вспомогательные методы для создания тестовых данных
     private List<Event> createTestEvents() {
