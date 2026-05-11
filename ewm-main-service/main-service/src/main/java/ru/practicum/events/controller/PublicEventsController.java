@@ -59,13 +59,7 @@ public class PublicEventsController {
 
             HttpServletRequest request
     ) {
-        EndpointHit hit = EndpointHit.builder()
-                .app("ewm-main-service")
-                .uri(request.getRequestURI())
-                .ip(request.getRemoteAddr())
-                .timestamp(LocalDateTime.now())
-                .build();
-        statsClient.hit(hit);
+        saveHit(request);
 
         List<EventShortDto> events = eventService.getPublishedEvents(
                 text, categories, paid, rangeStart, rangeEnd, onlyAvailable,
@@ -80,15 +74,24 @@ public class PublicEventsController {
             @PathVariable Long id,
             HttpServletRequest request
     ) {
-        EndpointHit hit = EndpointHit.builder()
-                .app("ewm-main-service")
-                .uri(request.getRequestURI())
-                .ip(request.getRemoteAddr())
-                .timestamp(LocalDateTime.now())
-                .build();
-        statsClient.hit(hit);
+        saveHit(request);
 
         EventFullDto event = eventService.getPublishedEventById(id);
         return ResponseEntity.ok(event);
+    }
+
+    private void saveHit(HttpServletRequest request) {
+        String ip = request.getRemoteAddr();
+        if ("0:0:0:0:0:0:0:1".equals(ip) || "127.0.0.1".equals(ip)) {
+            ip = "121.0.0.1";
+        }
+
+        EndpointHit hit = EndpointHit.builder()
+                .app("ewm-main-service")
+                .uri(request.getRequestURI())
+                .ip(ip)
+                .timestamp(LocalDateTime.now())
+                .build();
+        statsClient.hit(hit);
     }
 }
