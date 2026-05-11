@@ -53,7 +53,7 @@ public class PublicEventsControllerTest {
                 isNull(),
                 isNull(),
                 eq(false),
-                eq(true),
+                eq("VIEWS"),
                 eq(0),
                 eq(10)
         )).thenReturn(List.of(event1));

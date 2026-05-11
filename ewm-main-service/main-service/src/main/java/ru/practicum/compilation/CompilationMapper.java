@@ -21,13 +21,15 @@ public class CompilationMapper {
     public static CompilationDto toCompilationDto(
             Compilation compilation,
             Map<Long, Long> confirmedRequestsMap,
-            Map<Long, Long> viewsMap) {
+            Map<Long, Long> viewsMap,
+            Map<Long, Long> ratingsMap) {
 
         List<EventShortDto> shortEvents = compilation.getEvents().stream()
                 .map(event -> {
                     EventShortDto shortDto = EventsMapper.toShortEventDto(
                             event,
-                            confirmedRequestsMap.getOrDefault(event.getId(), 0L)
+                            confirmedRequestsMap.getOrDefault(event.getId(), 0L),
+                            ratingsMap.getOrDefault(event.getId(), 0L)
                     );
                     shortDto.setViews(viewsMap.getOrDefault(event.getId(), 0L));
                     return shortDto;

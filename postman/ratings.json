@@ -1,0 +1,337 @@
+{
+  "info": {
+    "_postman_id": "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+    "name": "EWM Feature: Ratings",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Setup Data (Users, Category, Event)",
+      "item": [
+        {
+          "name": "Create Initiator User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.environment.set(\"initiatorId\", pm.response.json().id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"initiator.feature@test.com\",\n  \"name\": \"Initiator\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/users",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "admin", "users" ]
+            }
+          }
+        },
+        {
+          "name": "Create Rater User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.environment.set(\"raterId\", pm.response.json().id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"rater.feature@test.com\",\n  \"name\": \"Rater\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/users",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "admin", "users" ]
+            }
+          }
+        },
+        {
+          "name": "Create Category",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.environment.set(\"categoryId\", pm.response.json().id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Rating Category\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/categories",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "admin", "categories" ]
+            }
+          }
+        },
+        {
+          "name": "Create Event",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.environment.set(\"eventId\", pm.response.json().id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"annotation\": \"Test event annotation with enough length\",\n  \"category\": {{categoryId}},\n  \"description\": \"Test event description with enough length to pass validation\",\n  \"eventDate\": \"2035-12-31 23:59:59\",\n  \"location\": { \"lat\": 55.75, \"lon\": 37.62 },\n  \"paid\": false,\n  \"participantLimit\": 0,\n  \"requestModeration\": false,\n  \"title\": \"Rating Test Event\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/{{initiatorId}}/events",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "users", "{{initiatorId}}", "events" ]
+            }
+          }
+        },
+        {
+          "name": "Publish Event (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200\", function () { pm.response.to.have.status(200); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stateAction\": \"PUBLISH_EVENT\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/events/{{eventId}}",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "admin", "events", "{{eventId}}" ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Rating Feature Tests",
+      "item": [
+        {
+          "name": "Add LIKE (Success)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{raterId}}/events/{{eventId}}/rate?isLike=true",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "users", "{{raterId}}", "events", "{{eventId}}", "rate" ],
+              "query": [
+                { "key": "isLike", "value": "true" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Add DISLIKE (Update Rate Success)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{raterId}}/events/{{eventId}}/rate?isLike=false",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "users", "{{raterId}}", "events", "{{eventId}}", "rate" ],
+              "query": [
+                { "key": "isLike", "value": "false" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Initiator rates own event (Conflict)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 409\", function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{initiatorId}}/events/{{eventId}}/rate?isLike=true",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "users", "{{initiatorId}}", "events", "{{eventId}}", "rate" ],
+              "query": [
+                { "key": "isLike", "value": "true" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Rate (Success)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 204\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{raterId}}/events/{{eventId}}/rate",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "users", "{{raterId}}", "events", "{{eventId}}", "rate" ]
+            }
+          }
+        },
+        {
+          "name": "Delete Non-existent Rate (Not Found)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{raterId}}/events/{{eventId}}/rate",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "users", "{{raterId}}", "events", "{{eventId}}", "rate" ]
+            }
+          }
+        },
+        {
+          "name": "Get Events sorted by RATING",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/events?sort=RATING",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "events" ],
+              "query": [
+                { "key": "sort", "value": "RATING" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ]
+}

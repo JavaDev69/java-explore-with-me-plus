@@ -16,7 +16,7 @@ public interface EventsService {
             LocalDateTime rangeStart,
             LocalDateTime rangeEnd,
             Boolean onlyAvailable,
-            boolean sortByViews,
+            String sort,
             int from,
             int size
     );
