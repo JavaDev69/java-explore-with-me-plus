@@ -1,0 +1,634 @@
+{
+  "info": {
+    "_postman_id": "2375d48d-61e9-40c3-bdf2-eaa5bc3f343b",
+    "name": "Comments API - Admin and User Endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "[User] Добавить комментарий к событию",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "id": "4970ff14-ba77-4927-b22c-bce7d2780148",
+            "exec": [
+              "pm.test(\"Статус 201 Created\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test(\"Тело ответа содержит id, text, authorName, status\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json).to.haveOwnProperty('id');",
+              "    pm.expect(json).to.haveOwnProperty('text');",
+              "    pm.expect(json).to.haveOwnProperty('authorName');",
+              "    pm.expect(json).to.haveOwnProperty('status');",
+              "    pm.expect(json.status).to.equal('PENDING');",
+              "});",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"text\": \"Отличное мероприятие! Надеюсь, будет ещё.\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/users/1/events/1/comments",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users",
+            "1",
+            "events",
+            "1",
+            "comments"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "[User] Получить комментарий по ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "id": "4a996f80-ba4f-49bb-8a9c-647c5063c687",
+            "exec": [
+              "pm.test(\"Статус 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Ответ содержит все поля комментария\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json).to.include.keys(['id', 'text', 'authorName', 'status', 'createdOn']);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/users/1/events/1/comments/1",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users",
+            "1",
+            "events",
+            "1",
+            "comments",
+            "1"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "[User] Получить все комментарии события",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "id": "db3695dd-145a-42f5-ab8e-7c09ff936596",
+            "exec": [
+              "pm.test(\"Статус 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Ответ — массив комментариев\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(Array.isArray(json)).to.be.true;",
+              "});",
+              "",
+              "if (pm.response.json().length > 0) {",
+              "    pm.test(\"Первый комментарий содержит корректные поля\", function () {",
+              "        const first = pm.response.json()[0];",
+              "        pm.expect(first).to.have.all.keys('id', 'text', 'eventId', 'authorId', 'authorName', 'status', 'createdOn', 'updatedOn');",
+              "    });",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/users/{{userId}}/events/{{eventId}}/comments?from=0&size=10",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users",
+            "{{userId}}",
+            "events",
+            "{{eventId}}",
+            "comments"
+          ],
+          "query": [
+            {
+              "key": "from",
+              "value": "0"
+            },
+            {
+              "key": "size",
+              "value": "10"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "[Admin] Модерация: одобрить комментарий",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "id": "6cf037fa-b458-490b-8fe7-8b9f257c4835",
+            "exec": [
+              "pm.test(\"Статус 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Статус изменён на APPROVED\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.status).to.equal('APPROVED');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"status\": \"APPROVED\"\n    \n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/admin/comments/1",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "admin",
+            "comments",
+            "1"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "[User] Обновить свой комментарий",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "id": "953b1dc7-ea0e-4a7a-addf-f5759d38c95d",
+            "exec": [
+              "pm.test(\"Статус 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Текст обновлён\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.text).to.equal(\"Обновил свой комментарий.\");",
+              "});",
+              "",
+              "pm.test(\"Поле updatedOn не null\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.updatedOn).to.not.be.null;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"text\": \"Обновил свой комментарий.\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/users/{{userId}}/events/{{eventId}}/comments/1",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users",
+            "{{userId}}",
+            "events",
+            "{{eventId}}",
+            "comments",
+            "1"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "[User] Удалить свой комментарий",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "id": "be04f2d3-4513-47d6-8127-bb53479da94b",
+            "exec": [
+              "pm.test(\"Статус 204 No Content\", function () {",
+              "    pm.response.to.have.status(204);",
+              "});",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/users/1/events/1/comments/1",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users",
+            "1",
+            "events",
+            "1",
+            "comments",
+            "1"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "[Admin] Получить все комментарии (с eventId)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "id": "891c62e8-ac29-4d47-9efc-e394f25e46de",
+            "exec": [
+              "pm.test(\"Статус 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Ответ — массив\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(Array.isArray(json)).to.be.true;",
+              "});",
+              "",
+              "if (pm.response.json().length > 0) {",
+              "    pm.test(\"Каждый комментарий содержит 'id', 'text', 'eventId', 'authorId', 'authorName', 'status', 'createdOn'\", function () {",
+              "        const first = pm.response.json()[0];",
+              "        pm.expect(first).to.have.all.keys('id', 'text', 'eventId', 'authorId', 'authorName', 'status', 'createdOn','updatedOn');",
+              "    });",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/admin/comments?eventId={{eventId}}&from=0&size=10",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "admin",
+            "comments"
+          ],
+          "query": [
+            {
+              "key": "eventId",
+              "value": "{{eventId}}"
+            },
+            {
+              "key": "from",
+              "value": "0"
+            },
+            {
+              "key": "size",
+              "value": "10"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "[User] Добавить комментарий к событию Copy",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "id": "5a8da152-a564-474f-8bff-d443ffb6e192",
+            "exec": [
+              "pm.test(\"Статус 201 Created\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test(\"Тело ответа содержит id, text, authorName, status\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json).to.haveOwnProperty('id');",
+              "    pm.expect(json).to.haveOwnProperty('text');",
+              "    pm.expect(json).to.haveOwnProperty('authorName');",
+              "    pm.expect(json).to.haveOwnProperty('status');",
+              "    pm.expect(json.status).to.equal('PENDING');",
+              "});",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"text\": \"Отличное мероприятие! Надеюсь, будет ещё.\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/users/1/events/1/comments",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users",
+            "1",
+            "events",
+            "1",
+            "comments"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "[Admin] Модерация: отклонить комментарий",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "id": "06013299-b555-4b3d-95fc-8976b2ed2699",
+            "exec": [
+              "pm.test(\"Статус 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Статус изменён на REJECTED\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.status).to.equal('REJECTED');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"status\": \"REJECTED\",\n    \"text\": \"Комментарий не соответствует правилам.\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/admin/comments/2",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "admin",
+            "comments",
+            "2"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "[Admin] Удалить комментарий",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "id": "3701089b-4666-4b70-8a8f-fdb24736a97d",
+            "exec": [
+              "pm.test(\"Статус 204 No Content\", function () {",
+              "    pm.response.to.have.status(204);",
+              "});",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/admin/comments/2",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "admin",
+            "comments",
+            "2"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "[Validation] Ошибка: пустой текст при создании",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "id": "c59c41f5-0071-44a6-a137-f9a3f9cfbe61",
+            "exec": [
+              "pm.test(\"Статус 400 Bad Request\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "",
+              "pm.test(\"Сообщение содержит ошибку валидации\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.message).to.include('Comment text cannot be blank');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"text\": \"   \"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/users/{{userId}}/events/{{eventId}}/comments",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users",
+            "{{userId}}",
+            "events",
+            "{{eventId}}",
+            "comments"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "[Validation] Ошибка: status=null при модерации",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "id": "41b47f29-cc6d-4676-9087-69bbdb498eb5",
+            "exec": [
+              "pm.test(\"Статус 400 Bad Request\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "",
+              "pm.test(\"Сообщение содержит 'Status must not be null for moderator'\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.message).to.include('Status must not be null for moderator');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"status\": null\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/admin/comments/{{commentId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "admin",
+            "comments",
+            "{{commentId}}"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "id": "1b6d2149-5af1-4c00-a725-76387735c91d",
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "id": "14a00b60-2055-4a97-bb27-f98ec2e29c19",
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "id": "47505281-2031-4a51-b99c-59f427bf73e3",
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "id": "fd227547-90ea-4279-8a24-1b43ab798970",
+      "key": "userId",
+      "value": "1"
+    },
+    {
+      "id": "6ab7660b-11dd-400a-81be-125fa1a1b837",
+      "key": "eventId",
+      "value": "1"
+    },
+    {
+      "id": "7c55f67d-324b-4292-a658-8d0a75bb03c3",
+      "key": "commentId",
+      "value": "1"
+    }
+  ],
+  "protocolProfileBehavior": {}
+}
