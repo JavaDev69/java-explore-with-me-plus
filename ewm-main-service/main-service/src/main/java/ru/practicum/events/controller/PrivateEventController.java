@@ -5,7 +5,6 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.events.dto.EventFullDto;
@@ -27,7 +26,7 @@ public class PrivateEventController {
     @ResponseStatus(HttpStatus.CREATED)
     public EventFullDto addEvent(
             @Valid @RequestBody NewEventDto newEventDto,
-                @PathVariable @Positive Long userId) {
+            @PathVariable @Positive Long userId) {
 
         log.info("Получен запрос на создание нового события для пользователя с ID: {}. Заголовок события: '{}'", userId, newEventDto.getTitle());
         log.debug("Полные данные события, полученные от клиента: {}", newEventDto);

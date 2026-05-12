@@ -5,8 +5,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import ru.practicum.categories.Category;
@@ -28,8 +26,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.h2.util.ParserUtil.LIMIT;
-import static org.h2.util.ParserUtil.OFFSET;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
 
@@ -49,7 +45,6 @@ class EventServiceImplTest {
     private static final Long USER_ID = 1L;
     private static final int FROM = 0;
     private static final int SIZE = 10;
-
 
 
     @Test
@@ -124,7 +119,6 @@ class EventServiceImplTest {
         assertThat(result).isNotNull();
         assertThat(result).hasSize(5); // Ожидаем 5 элементов на странице
     }
-
 
 
     @Test

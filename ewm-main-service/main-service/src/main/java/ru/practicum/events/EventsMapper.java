@@ -58,6 +58,7 @@ public class EventsMapper {
         }
         return dto;
     }
+
     /**
      * Преобразует DTO нового события в сущность Event.
      *
