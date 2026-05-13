@@ -38,6 +38,12 @@ public class EventsMapper {
     }
 
     public static EventFullDto toEventFullDto(Event event, Long rating) {
+        EventFullDto dto = toEventFullDto(event);
+        dto.setRating(rating != null ? rating : 0L);
+        return dto;
+    }
+
+    public static EventFullDto toEventFullDto(Event event) {
         EventFullDto dto = new EventFullDto();
         dto.setId(event.getId());
         dto.setAnnotation(event.getAnnotation());
@@ -55,7 +61,15 @@ public class EventsMapper {
         dto.setState(event.getState().name());
         dto.setTitle(event.getTitle());
         dto.setViews(event.getViews());
+        return dto;
+    }
+
+    public static EventFullDto toEventFullDto(Event event, ModerationComment mc, Long rating) {
+        EventFullDto dto = toEventFullDto(event);
         dto.setRating(rating != null ? rating : 0L);
+        if (mc != null) {
+            dto.setLastModerationCommentDto(moderationCommentShortDto(mc));
+        }
         return dto;
     }
 

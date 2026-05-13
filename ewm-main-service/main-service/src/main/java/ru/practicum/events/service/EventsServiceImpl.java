@@ -23,6 +23,7 @@ import ru.practicum.error.exception.ConflictException;
 import ru.practicum.error.exception.EventCreationRuleException;
 import ru.practicum.error.exception.NotFoundException;
 import ru.practicum.events.moderation.ModerationComment;
+import ru.practicum.events.moderation.ModerationCommentRepository;
 import ru.practicum.rating.RateRepository;
 import ru.practicum.requests.RequestRepository;
 import ru.practicum.user.User;
@@ -48,6 +49,7 @@ public class EventsServiceImpl implements EventsService {
     private final StatsClient statsClient;
     private final EntityManager entityManager;
     private final RateRepository rateRepository; // <--- ДОБАВЛЕНО
+    private final ModerationCommentRepository moderationCommentRepository;
 
     @Override
     public EventFullDto saveEvent(NewEventDto newEventDto, Long userId) {
