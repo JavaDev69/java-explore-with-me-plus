@@ -31,8 +31,7 @@ public class EventsMapper {
     }
 
     public static EventShortDto toShortEventDto(Event event, Long confirmedRequests, Long rating) {
-        EventShortDto dto = new EventShortDto();
-        toShortEventDto(event, confirmedRequests);
+        EventShortDto dto = toShortEventDto(event, confirmedRequests);
         dto.setRating(rating != null ? rating : 0L);
         return dto;
     }
