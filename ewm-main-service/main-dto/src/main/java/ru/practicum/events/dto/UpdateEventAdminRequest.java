@@ -43,4 +43,6 @@ public class UpdateEventAdminRequest implements UpdateEventRequest {
 
     @Size(min = 3, max = 120, message = "Title must be between 3 and 120 characters")
     private String title;
+
+    private String moderationComment;
 }

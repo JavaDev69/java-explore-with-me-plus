@@ -78,3 +78,12 @@ CREATE TABLE IF NOT EXISTS ratings (
     is_like BOOLEAN NOT NULL,
     UNIQUE(event_id, user_id)
 );
+
+CREATE TABLE IF NOT EXISTS moderation_comments (
+    id BIGSERIAL PRIMARY KEY,
+    event_id BIGINT NOT NULL,
+    comment_text VARCHAR(2000) NOT NULL,
+    created_on TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_moderation_comment_event FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
+);

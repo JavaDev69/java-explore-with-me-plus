@@ -22,6 +22,7 @@ import ru.practicum.events.dto.*;
 import ru.practicum.error.exception.ConflictException;
 import ru.practicum.error.exception.EventCreationRuleException;
 import ru.practicum.error.exception.NotFoundException;
+import ru.practicum.events.moderation.ModerationComment;
 import ru.practicum.rating.RateRepository;
 import ru.practicum.requests.RequestRepository;
 import ru.practicum.user.User;
@@ -29,6 +30,7 @@ import ru.practicum.user.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static ru.practicum.events.EventsMapper.*;
@@ -113,19 +115,41 @@ public class EventsServiceImpl implements EventsService {
 
     @Override
     public List<EventFullDto> getEvents(
-            List<Long> userIds, List<String> states, List<Long> categoryIds,
-            LocalDateTime rangeStart, LocalDateTime rangeEnd, int from, int size) {
-
+            List<Long> userIds,
+            List<String> states,
+            List<Long> categoryIds,
+            LocalDateTime rangeStart,
+            LocalDateTime rangeEnd,
+            int from,
+            int size
+    ) {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Event> query = cb.createQuery(Event.class);
         Root<Event> root = query.from(Event.class);
 
         List<Predicate> predicates = new ArrayList<>();
-        if (userIds != null && !userIds.isEmpty()) predicates.add(root.get("initiator").get("id").in(userIds));
-        if (states != null && !states.isEmpty()) predicates.add(root.get("state").in(states.stream().map(EventState::valueOf).collect(Collectors.toList())));
-        if (categoryIds != null && !categoryIds.isEmpty()) predicates.add(root.get("category").get("id").in(categoryIds));
-        if (rangeStart != null) predicates.add(cb.greaterThanOrEqualTo(root.get("eventDate"), rangeStart));
-        if (rangeEnd != null) predicates.add(cb.lessThanOrEqualTo(root.get("eventDate"), rangeEnd));
+
+        if (userIds != null && !userIds.isEmpty()) {
+            predicates.add(root.get("initiator").get("id").in(userIds));
+        }
+
+        if (states != null && !states.isEmpty()) {
+            List<EventState> stateEnums = states.stream()
+                    .map(EventState::valueOf)
+                    .collect(Collectors.toList());
+            predicates.add(root.get("state").in(stateEnums));
+        }
+
+        if (categoryIds != null && !categoryIds.isEmpty()) {
+            predicates.add(root.get("category").get("id").in(categoryIds));
+        }
+
+        if (rangeStart != null) {
+            predicates.add(cb.greaterThanOrEqualTo(root.get("eventDate"), rangeStart));
+        }
+        if (rangeEnd != null) {
+            predicates.add(cb.lessThanOrEqualTo(root.get("eventDate"), rangeEnd));
+        }
 
         query.select(root).where(predicates.toArray(new Predicate[0]));
         query.orderBy(cb.desc(root.get("eventDate")));
@@ -151,89 +175,165 @@ public class EventsServiceImpl implements EventsService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
 
+        ModerationComment moderationComment = null;
+
         if (request.getStateAction() != null) {
             switch (request.getStateAction()) {
                 case PUBLISH_EVENT -> {
-                    if (!event.getState().equals(EventState.PENDING)) throw new ConflictException("Cannot publish event in state: " + event.getState());
-                    if (event.getEventDate().isBefore(LocalDateTime.now().plusHours(1))) throw new ConflictException("Event must be at least 1 hour after current time to be published");
+                    if (!event.getState().equals(EventState.PENDING)) {
+                        throw new ConflictException("Cannot publish event in state: " + event.getState());
+                    }
+                    if (event.getEventDate().isBefore(LocalDateTime.now().plusHours(1))) {
+                        throw new ConflictException("Event must be at least 1 hour after current time to be published");
+                    }
                     event.setState(EventState.PUBLISHED);
                     event.setPublishedOn(LocalDateTime.now());
                 }
                 case REJECT_EVENT -> {
-                    if (event.getState().equals(EventState.PUBLISHED)) throw new ConflictException("Cannot reject published event");
+                    if (event.getState().equals(EventState.PUBLISHED)) {
+                        throw new ConflictException("Cannot reject published event");
+                    }
+
+                    if (request.getModerationComment() != null && !request.getModerationComment().trim().isEmpty()) {
+                        moderationComment = ModerationComment.builder()
+                                .event(event)
+                                .commentText(request.getModerationComment())
+                                .createdOn(LocalDateTime.now())
+                                .build();
+                        moderationComment = moderationCommentRepository.save(moderationComment);
+                    }
+
                     event.setState(EventState.CANCELED);
+                    event.setRequestModeration(false);
                 }
             }
         }
+
         applyNonNullUpdates(event, request);
+
         Event saved = eventRepository.save(event);
         saved.setConfirmedRequests(requestRepository.countByEventIdAndStatus(saved.getId(), EventState.CONFIRMED));
         setViewsToEvent(saved);
-        Long rating = rateRepository.getRatingForEvent(saved.getId());
 
-        return toEventFullDto(saved, rating);
+        Long rating = rateRepository.getRatingForEvent(saved.getId());
+        return EventsMapper.toEventFullDto(saved, moderationComment, rating);
     }
 
     @Override
+    @Transactional
     public EventFullDto updateInactiveEvent(Long userId, Long eventId, UpdateEventUserRequest updateEventUserRequest) {
+        log.info("Начало обновления события с ID: {} для пользователя с ID: {}", eventId, userId);
+        log.debug("Dto {}", updateEventUserRequest);
+
+        // 1. Находим событие по ID
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Событие с ID " + eventId + " не найдено"));
 
-        if (!event.getInitiator().getId().equals(userId)) throw new ForbiddenActionException("Пользователь с ID " + userId + " не является инициатором события " + eventId);
-
-        EventState currentState = event.getState();
-        if (!currentState.equals(EventState.CANCELED) && !currentState.equals(EventState.PENDING)) {
-            throw new ConflictException("Только отменённые события или события в состоянии ожидания модерации могут быть изменены.");
+        // 2. Проверяем принадлежность события пользователю
+        User user = event.getInitiator();
+        if (!user.getId().equals(userId)) {
+            throw new ForbiddenActionException("Пользователь с ID " + userId + " не является инициатором события " + eventId);
         }
 
+        // 3. Проверяем статус события
+        EventState currentState = event.getState();
+        if (!currentState.equals(EventState.CANCELED) && !currentState.equals(EventState.PENDING)) {
+            throw new ConflictException(
+                    "Только отменённые события или события в состоянии ожидания модерации могут быть изменены. Текущий статус: " + currentState
+            );
+        }
+
+        // 4. Обрабатываем stateAction, если указан
         StateAction stateAction = updateEventUserRequest.getStateAction();
         if (stateAction != null) {
             switch (stateAction) {
-                case SEND_TO_REVIEW -> event.setState(EventState.PENDING);
-                case CANCEL_REVIEW -> event.setState(EventState.CANCELED);
-                default -> throw new ConflictException("Недопустимое значение stateAction");
+                case SEND_TO_REVIEW:
+                    event.setState(EventState.PENDING);
+                    break;
+                case CANCEL_REVIEW:
+                    event.setState(EventState.CANCELED);
+                    break;
+                default:
+                    throw new ConflictException(
+                            "Недопустимое значение stateAction: " + stateAction +
+                                    ". Допустимые значения: SEND_TO_REVIEW, CANCEL_REVIEW"
+                    );
             }
         }
 
+        // 5. Применяем обновления полей (только не‑null)
         applyNonNullUpdates(event, updateEventUserRequest);
 
+        // 6. Валидируем дату события
         LocalDateTime updateDate = updateEventUserRequest.getEventDate();
-        if (updateDate != null) validateEventDate(updateDate);
-        else if (stateAction == StateAction.SEND_TO_REVIEW) validateEventDate(event.getEventDate());
+        if (updateDate != null) {
+            validateEventDate(updateDate);
+        } else if (stateAction == StateAction.SEND_TO_REVIEW) {
+            validateEventDate(event.getEventDate());
+            event.setRequestModeration(true);
+        }
 
+        // 7. Сохраняем и возвращаем результат
         Event updatedEvent = eventRepository.save(event);
-        Long rating = rateRepository.getRatingForEvent(updatedEvent.getId());
+        log.info("Событие с ID: {} успешно обновлено", eventId);
 
+        Long rating = rateRepository.getRatingForEvent(updatedEvent.getId());
         return toEventFullDto(updatedEvent, rating);
     }
 
     @Override
     public List<EventFullDto> getUserEvents(Long userId, int from, int size) {
+        log.debug("Начинаем поиск событий для пользователя с ID: {}, from: {}, size: {}", userId, from, size);
+
+
         User user = findUserById(userId);
         List<Event> events = eventRepository.findAllByInitiatorIdWithOffset(user.getId(), from, size);
-        if (events.isEmpty()) return Collections.emptyList();
+
+        if (events.isEmpty()) {
+            log.debug("Для пользователя с ID {} не найдено событий", userId);
+            return Collections.emptyList();
+        }
 
         Map<Long, Long> confirmedRequests = getConfirmedRequestsMap(events);
         Map<Long, Long> ratings = getRatingsMap(events);
 
-        return events.stream()
+        List<EventFullDto> eventFullDtos = events.stream()
                 .peek(event -> event.setConfirmedRequests(confirmedRequests.getOrDefault(event.getId(), 0L)))
                 .map(event -> toEventFullDto(event, ratings.getOrDefault(event.getId(), 0L)))
                 .collect(Collectors.toList());
+
+        log.info("Найдено {} событий для пользователя с ID {}", events.size(), userId);
+        return eventFullDtos;
     }
 
     @Override
     public EventFullDto getUserEventById(Long userId, Long eventId) {
-        findUserById(userId);
+        log.debug("Начинаем поиск события с ID: {} для пользователя с ID: {}", eventId, userId);
+
+        // Находим пользователя — если не найден, будет выброшено исключение NotFoundException
+        User user = findUserById(userId);
+
+        // Ищем событие по ID и проверяем принадлежность пользователю
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
 
-        if (!event.getInitiator().getId().equals(userId)) throw new ForbiddenActionException("Пользователь не является инициатором события");
+        if (!event.getInitiator().getId().equals(userId)) {
+            throw new ForbiddenActionException(
+                    "Пользователь с ID " + userId + " не является инициатором события " + eventId
+            );
+        }
 
-        event.setConfirmedRequests(requestRepository.countByEventIdAndStatus(event.getId(), EventState.CONFIRMED));
+        log.debug("Событие найдено в БД: ID {}, заголовок '{}'", event.getId(), event.getTitle());
+
+        // Получаем количество подтверждённых заявок
+        long confirmedRequests = requestRepository.countByEventIdAndStatus(event.getId(), EventState.CONFIRMED);
+        event.setConfirmedRequests(confirmedRequests);
+
+        // Обновляем просмотры
         setViewsToEvent(event);
         Long rating = rateRepository.getRatingForEvent(eventId);
 
+        log.info("Полные данные события подготовлены для возврата");
         return toEventFullDto(event, rating);
     }
 
@@ -286,9 +386,11 @@ public class EventsServiceImpl implements EventsService {
     }
 
     private Map<Long, Long> getRequestCounts(List<Long> eventIds) {
-        if (eventIds.isEmpty()) return Map.of();
         return requestRepository.countConfirmedRequestsByEventIds(eventIds, EventState.CONFIRMED).stream()
-                .collect(Collectors.toMap(r -> ((Number) r[0]).longValue(), r -> ((Number) r[1]).longValue()));
+                .collect(Collectors.toMap(
+                        r -> ((Number) r[0]).longValue(),
+                        r -> ((Number) r[1]).longValue()
+                ));
     }
 
     private Map<Long, Long> getRatingsMap(List<Event> events) {
@@ -318,5 +420,49 @@ public class EventsServiceImpl implements EventsService {
             event.setCategory(category);
         }
         if (request.getEventDate() != null) event.setEventDate(request.getEventDate());
+    }
+
+    @Override
+    public List<EventFullDto> getUserModerationHistory(Long userId, int page, int limit) {
+
+        Pageable pageable = PageRequest.of(page, limit);
+
+        List<Event> eventList = eventRepository.findUserModerationHistory(userId, pageable);
+        List<EventFullDto> fullEventDtos = new ArrayList<>();
+
+        if (!eventList.isEmpty()) {
+            List<Long> eventIds = eventList.stream()
+                    .map(Event::getId)
+                    .collect(Collectors.toList());
+
+            // Получаем последние комментарии модерации для событий
+            List<ModerationComment> moderationComments = moderationCommentRepository.findLastCommentsByEventIds(eventIds);
+            // Создаём маппинг: eventId → ModerationComment
+            Map<Long, ModerationComment> commentsMap = moderationComments.stream()
+                    .collect(Collectors.toMap(
+                            comment -> comment.getEvent().getId(),
+                            Function.identity()
+                    ));
+
+            fullEventDtos = eventList.stream()
+                    .map(event -> {
+                        ModerationComment comment = commentsMap.get(event.getId());
+                        return EventsMapper.toEventFullDto(event, comment);
+                    })
+                    .collect(Collectors.toList());
+        }
+
+        return fullEventDtos;
+    }
+
+    @Override
+    public List<EventFullDto> getEventsForModeration(int page, int limit) {
+        Pageable pageable = PageRequest.of(page, limit);
+        List<Event> events = eventRepository.findByRequestModerationAndState(
+                Boolean.TRUE, EventState.PENDING, pageable
+        );
+        return events.stream()
+                .map(EventsMapper::toEventFullDto)
+                .collect(Collectors.toList());
     }
 }
