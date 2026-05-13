@@ -1014,6 +1014,537 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "subscriptions",
+      "item": [
+        {
+          "name": "Подписка пользователя на другого пользователя",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const main = async () => {",
+                  "    const api = new API(pm);",
+                  "    const rnd = new RandomUtils();",
+                  "    const subscriber = await api.addUser(rnd.getUser());",
+                  "    const publisher = await api.addUser(rnd.getUser());",
+                  "    pm.collectionVariables.set('subscriberId', subscriber.id);",
+                  "    pm.collectionVariables.set('publisherId', publisher.id);",
+                  "};",
+                  "",
+                  "const interval = setInterval(() => {}, 1000);",
+                  "setTimeout(async () => {",
+                  "    try {",
+                  "        await main();",
+                  "    } catch (err) {",
+                  "        console.error('Ошибка при подготовке тестовых данных.', err);",
+                  "    } finally {",
+                  "        clearInterval(interval);",
+                  "    }",
+                  "}, 100);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Подписка должна вернуть 201 Created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Ответ на создание подписки может быть пустым', function () {",
+                  "    pm.expect(pm.response.text()).to.be.oneOf(['', null]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/:userId/subscriptions/:publisherId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":userId",
+                "subscriptions",
+                ":publisherId"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{subscriberId}}"
+                },
+                {
+                  "key": "publisherId",
+                  "value": "{{publisherId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Запрет подписки пользователя на самого себя",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const main = async () => {",
+                  "    const api = new API(pm);",
+                  "    const rnd = new RandomUtils();",
+                  "    const user = await api.addUser(rnd.getUser());",
+                  "    pm.collectionVariables.set('subscriberId', user.id);",
+                  "    pm.collectionVariables.set('publisherId', user.id);",
+                  "};",
+                  "",
+                  "const interval = setInterval(() => {}, 1000);",
+                  "setTimeout(async () => {",
+                  "    try {",
+                  "        await main();",
+                  "    } catch (err) {",
+                  "        console.error('Ошибка при подготовке тестовых данных.', err);",
+                  "    } finally {",
+                  "        clearInterval(interval);",
+                  "    }",
+                  "}, 100);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Самоподписка должна вернуть 409 Conflict', function () {",
+                  "    pm.response.to.have.status(409);",
+                  "    pm.response.to.be.withBody;",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('Ошибка содержит статус CONFLICT', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql('CONFLICT');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/:userId/subscriptions/:publisherId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":userId",
+                "subscriptions",
+                ":publisherId"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{subscriberId}}"
+                },
+                {
+                  "key": "publisherId",
+                  "value": "{{publisherId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Подписка на несуществующего пользователя",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const main = async () => {",
+                  "    const api = new API(pm);",
+                  "    const rnd = new RandomUtils();",
+                  "    const subscriber = await api.addUser(rnd.getUser());",
+                  "    pm.collectionVariables.set('subscriberId', subscriber.id);",
+                  "    pm.collectionVariables.set('publisherId', 999999999);",
+                  "};",
+                  "",
+                  "const interval = setInterval(() => {}, 1000);",
+                  "setTimeout(async () => {",
+                  "    try {",
+                  "        await main();",
+                  "    } catch (err) {",
+                  "        console.error('Ошибка при подготовке тестовых данных.', err);",
+                  "    } finally {",
+                  "        clearInterval(interval);",
+                  "    }",
+                  "}, 100);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Подписка на несуществующего пользователя должна вернуть 404 Not Found', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "    pm.response.to.be.withBody;",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('Ошибка содержит статус NOT_FOUND', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/:userId/subscriptions/:publisherId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":userId",
+                "subscriptions",
+                ":publisherId"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{subscriberId}}"
+                },
+                {
+                  "key": "publisherId",
+                  "value": "{{publisherId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Отписка от пользователя без существующей подписки",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const main = async () => {",
+                  "    const api = new API(pm);",
+                  "    const rnd = new RandomUtils();",
+                  "    const subscriber = await api.addUser(rnd.getUser());",
+                  "    const publisher = await api.addUser(rnd.getUser());",
+                  "    pm.collectionVariables.set('subscriberId', subscriber.id);",
+                  "    pm.collectionVariables.set('publisherId', publisher.id);",
+                  "};",
+                  "",
+                  "const interval = setInterval(() => {}, 1000);",
+                  "setTimeout(async () => {",
+                  "    try {",
+                  "        await main();",
+                  "    } catch (err) {",
+                  "        console.error('Ошибка при подготовке тестовых данных.', err);",
+                  "    } finally {",
+                  "        clearInterval(interval);",
+                  "    }",
+                  "}, 100);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Отписка без существующей подписки должна вернуть 404 Not Found', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "    pm.response.to.be.withBody;",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('Ошибка содержит статус NOT_FOUND', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/:userId/subscriptions/:publisherId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":userId",
+                "subscriptions",
+                ":publisherId"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{subscriberId}}"
+                },
+                {
+                  "key": "publisherId",
+                  "value": "{{publisherId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Отписка пользователя",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const main = async () => {",
+                  "    const api = new API(pm);",
+                  "    const rnd = new RandomUtils();",
+                  "    const subscriber = await api.addUser(rnd.getUser());",
+                  "    const publisher = await api.addUser(rnd.getUser());",
+                  "    await api.subscribe(subscriber.id, publisher.id);",
+                  "    pm.collectionVariables.set('subscriberId', subscriber.id);",
+                  "    pm.collectionVariables.set('publisherId', publisher.id);",
+                  "};",
+                  "",
+                  "const interval = setInterval(() => {}, 1000);",
+                  "setTimeout(async () => {",
+                  "    try {",
+                  "        await main();",
+                  "    } catch (err) {",
+                  "        console.error('Ошибка при подготовке тестовых данных.', err);",
+                  "    } finally {",
+                  "        clearInterval(interval);",
+                  "    }",
+                  "}, 100);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Отписка должна вернуть 204 No Content', function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});",
+                  "",
+                  "pm.test('Тело ответа при отписке пустое', function () {",
+                  "    pm.expect(pm.response.text()).to.be.oneOf(['', null]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/:userId/subscriptions/:publisherId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":userId",
+                "subscriptions",
+                ":publisherId"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{subscriberId}}"
+                },
+                {
+                  "key": "publisherId",
+                  "value": "{{publisherId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Получение актуальных опубликованных событий по подписке",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const main = async () => {",
+                  "    const api = new API(pm);",
+                  "    const rnd = new RandomUtils();",
+                  "    const subscriber = await api.addUser(rnd.getUser());",
+                  "    const publisherOne = await api.addUser(rnd.getUser());",
+                  "    const publisherTwo = await api.addUser(rnd.getUser());",
+                  "    const notSubscribedPublisher = await api.addUser(rnd.getUser());",
+                  "    const category = await api.addCategory(rnd.getCategory());",
+                  "",
+                  "    const olderEvent = await api.addEvent(publisherOne.id, rnd.getEvent(category.id, 48));",
+                  "    const newerEvent = await api.addEvent(publisherTwo.id, rnd.getEvent(category.id, 96));",
+                  "    const notSubscribedEvent = await api.addEvent(notSubscribedPublisher.id, rnd.getEvent(category.id, 120));",
+                  "    const pendingEvent = await api.addEvent(publisherOne.id, rnd.getEvent(category.id, 144));",
+                  "",
+                  "    await api.publishEvent(olderEvent.id);",
+                  "    await api.publishEvent(newerEvent.id);",
+                  "    await api.publishEvent(notSubscribedEvent.id);",
+                  "    await api.subscribe(subscriber.id, publisherOne.id);",
+                  "    await api.subscribe(subscriber.id, publisherTwo.id);",
+                  "",
+                  "    pm.collectionVariables.set('subscriberId', subscriber.id);",
+                  "    pm.collectionVariables.set('olderEventId', olderEvent.id);",
+                  "    pm.collectionVariables.set('newerEventId', newerEvent.id);",
+                  "    pm.collectionVariables.set('notSubscribedEventId', notSubscribedEvent.id);",
+                  "    pm.collectionVariables.set('pendingEventId', pendingEvent.id);",
+                  "};",
+                  "",
+                  "const interval = setInterval(() => {}, 1000);",
+                  "setTimeout(async () => {",
+                  "    try {",
+                  "        await main();",
+                  "    } catch (err) {",
+                  "        console.error('Ошибка при подготовке тестовых данных.', err);",
+                  "    } finally {",
+                  "        clearInterval(interval);",
+                  "    }",
+                  "}, 100);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Лента подписок должна вернуть 200 OK и JSON-массив', function () {",
+                  "    pm.response.to.be.ok;",
+                  "    pm.response.to.be.withBody;",
+                  "    pm.response.to.be.json;",
+                  "    pm.expect(pm.response.json()).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Лента содержит только события подписанных пользователей', function () {",
+                  "    const events = pm.response.json();",
+                  "    const ids = events.map(event => event.id);",
+                  "    pm.expect(ids).to.include(Number(pm.collectionVariables.get('olderEventId')));",
+                  "    pm.expect(ids).to.include(Number(pm.collectionVariables.get('newerEventId')));",
+                  "    pm.expect(ids).to.not.include(Number(pm.collectionVariables.get('notSubscribedEventId')));",
+                  "});",
+                  "",
+                  "pm.test('Лента содержит только опубликованные события', function () {",
+                  "    const ids = pm.response.json().map(event => event.id);",
+                  "    pm.expect(ids).to.not.include(Number(pm.collectionVariables.get('pendingEventId')));",
+                  "});",
+                  "",
+                  "pm.test('События отсортированы по eventDate по убыванию', function () {",
+                  "    const events = pm.response.json();",
+                  "    pm.expect(events.length).to.eql(2);",
+                  "    pm.expect(events[0].id).to.eql(Number(pm.collectionVariables.get('newerEventId')));",
+                  "    pm.expect(events[1].id).to.eql(Number(pm.collectionVariables.get('olderEventId')));",
+                  "    pm.expect(events[0].eventDate > events[1].eventDate).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/:userId/subscriptions/events?from=0&size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":userId",
+                "subscriptions",
+                "events"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{subscriberId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "event": [
@@ -1024,7 +1555,107 @@
         "packages": {},
         "requests": {},
         "exec": [
-          ""
+          "API = class {\r",
+          "    constructor(pm) {\r",
+          "        this.pm = pm;\r",
+          "        this.baseUrl = pm.collectionVariables.get('baseUrl');\r",
+          "    }\r",
+          "\r",
+          "    async addUser(user) {\r",
+          "        return this.post('/admin/users', user, 'Ошибка при создании пользователя');\r",
+          "    }\r",
+          "\r",
+          "    async addCategory(category) {\r",
+          "        return this.post('/admin/categories', category, 'Ошибка при создании категории');\r",
+          "    }\r",
+          "\r",
+          "    async addEvent(userId, event) {\r",
+          "        return this.post('/users/' + userId + '/events', event, 'Ошибка при создании события');\r",
+          "    }\r",
+          "\r",
+          "    async publishEvent(eventId) {\r",
+          "        return this.patch('/admin/events/' + eventId, {stateAction: 'PUBLISH_EVENT'}, 'Ошибка при публикации события');\r",
+          "    }\r",
+          "\r",
+          "    async subscribe(userId, publisherId) {\r",
+          "        return this.post('/users/' + userId + '/subscriptions/' + publisherId, null, 'Ошибка при создании подписки', true);\r",
+          "    }\r",
+          "\r",
+          "    async post(path, body, errorText, allowEmpty = false) {\r",
+          "        return this.sendRequest('POST', path, body, errorText, allowEmpty);\r",
+          "    }\r",
+          "\r",
+          "    async patch(path, body, errorText, allowEmpty = false) {\r",
+          "        return this.sendRequest('PATCH', path, body, errorText, allowEmpty);\r",
+          "    }\r",
+          "\r",
+          "    async sendRequest(method, path, body = null, errorText = 'Ошибка при выполнении запроса', allowEmpty = false) {\r",
+          "        return new Promise((resolve, reject) => {\r",
+          "            const request = {\r",
+          "                url: this.baseUrl + path,\r",
+          "                method: method,\r",
+          "                header: { 'Content-Type': 'application/json', 'Accept': 'application/json' }\r",
+          "            };\r",
+          "            if (body !== null) {\r",
+          "                request.body = { mode: 'raw', raw: JSON.stringify(body) };\r",
+          "            }\r",
+          "\r",
+          "            this.pm.sendRequest(request, (error, response) => {\r",
+          "                if (error || response.code >= 400) {\r",
+          "                    const details = error ? error : response.text();\r",
+          "                    reject(new Error(errorText + ': ' + details));\r",
+          "                    return;\r",
+          "                }\r",
+          "                if (response.text() === '') {\r",
+          "                    if (allowEmpty) {\r",
+          "                        resolve(null);\r",
+          "                        return;\r",
+          "                    }\r",
+          "                    reject(new Error(errorText + ': пустое тело ответа'));\r",
+          "                    return;\r",
+          "                }\r",
+          "                resolve(response.json());\r",
+          "            });\r",
+          "        });\r",
+          "    }\r",
+          "};\r",
+          "\r",
+          "RandomUtils = class {\r",
+          "    getUser() {\r",
+          "        return {\r",
+          "            name: pm.variables.replaceIn('{{$randomFullName}}'),\r",
+          "            email: Date.now() + '.' + Math.floor(Math.random() * 1000000) + '@example.com'\r",
+          "        };\r",
+          "    }\r",
+          "\r",
+          "    getCategory() {\r",
+          "        return {\r",
+          "            name: 'cat-' + Date.now() + '-' + Math.floor(Math.random() * 1000000)\r",
+          "        };\r",
+          "    }\r",
+          "\r",
+          "    getEvent(categoryId, hourShift = 48) {\r",
+          "        return {\r",
+          "            annotation: 'Annotation for subscription feature test with enough characters',\r",
+          "            category: categoryId,\r",
+          "            description: 'Description for subscription feature test with enough characters',\r",
+          "            eventDate: this.getFutureDateTime(hourShift),\r",
+          "            location: {\r",
+          "                lat: 55.75,\r",
+          "                lon: 37.62\r",
+          "            },\r",
+          "            paid: false,\r",
+          "            participantLimit: 10,\r",
+          "            requestModeration: true,\r",
+          "            title: 'Subscription feature event ' + Date.now() + '-' + Math.floor(Math.random() * 1000000)\r",
+          "        };\r",
+          "    }\r",
+          "\r",
+          "    getFutureDateTime(hourShift = 48) {\r",
+          "        const moment = require('moment');\r",
+          "        return moment().add(hourShift, 'hour').format('YYYY-MM-DD HH:mm:ss');\r",
+          "    }\r",
+          "};"
         ]
       }
     },
@@ -1056,686 +1687,33 @@
     {
       "key": "commentId",
       "value": ""
+    },
+    {
+      "key": "subscriberId",
+      "value": ""
+    },
+    {
+      "key": "publisherId",
+      "value": ""
+    },
+    {
+      "key": "olderEventId",
+      "value": ""
+    },
+    {
+      "key": "newerEventId",
+      "value": ""
+    },
+    {
+      "key": "notSubscribedEventId",
+      "value": ""
+    },
+    {
+      "key": "pendingEventId",
+      "value": ""
+    },
+    {
+      "value": ""
     }
   ]
-	"info": {
-		"_postman_id": "9d8a0b1e-06d3-4d0f-8f96-5cf78069e6d0",
-		"name": "Explore With Me - Feature Subscriptions",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-	},
-	"item": [
-		{
-			"name": "Subscriptions",
-			"item": [
-				{
-					"name": "Подписка пользователя на другого пользователя",
-					"event": [
-						{
-							"listen": "prerequest",
-							"script": {
-								"type": "text/javascript",
-								"exec": [
-									"const main = async () => {",
-									"    const api = new API(pm);",
-									"    const rnd = new RandomUtils();",
-									"    const subscriber = await api.addUser(rnd.getUser());",
-									"    const publisher = await api.addUser(rnd.getUser());",
-									"    pm.collectionVariables.set('subscriberId', subscriber.id);",
-									"    pm.collectionVariables.set('publisherId', publisher.id);",
-									"};",
-									"",
-									"const interval = setInterval(() => {}, 1000);",
-									"setTimeout(async () => {",
-									"    try {",
-									"        await main();",
-									"    } catch (err) {",
-									"        console.error('Ошибка при подготовке тестовых данных.', err);",
-									"    } finally {",
-									"        clearInterval(interval);",
-									"    }",
-									"}, 100);"
-								]
-							}
-						},
-						{
-							"listen": "test",
-							"script": {
-								"type": "text/javascript",
-								"exec": [
-									"pm.test('Подписка должна вернуть 201 Created', function () {",
-									"    pm.response.to.have.status(201);",
-									"});",
-									"",
-									"pm.test('Ответ на создание подписки может быть пустым', function () {",
-									"    pm.expect(pm.response.text()).to.be.oneOf(['', null]);",
-									"});"
-								]
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/users/:userId/subscriptions/:publisherId",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"users",
-								":userId",
-								"subscriptions",
-								":publisherId"
-							],
-							"variable": [
-								{
-									"key": "userId",
-									"value": "{{subscriberId}}"
-								},
-								{
-									"key": "publisherId",
-									"value": "{{publisherId}}"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Запрет подписки пользователя на самого себя",
-					"event": [
-						{
-							"listen": "prerequest",
-							"script": {
-								"type": "text/javascript",
-								"exec": [
-									"const main = async () => {",
-									"    const api = new API(pm);",
-									"    const rnd = new RandomUtils();",
-									"    const user = await api.addUser(rnd.getUser());",
-									"    pm.collectionVariables.set('subscriberId', user.id);",
-									"    pm.collectionVariables.set('publisherId', user.id);",
-									"};",
-									"",
-									"const interval = setInterval(() => {}, 1000);",
-									"setTimeout(async () => {",
-									"    try {",
-									"        await main();",
-									"    } catch (err) {",
-									"        console.error('Ошибка при подготовке тестовых данных.', err);",
-									"    } finally {",
-									"        clearInterval(interval);",
-									"    }",
-									"}, 100);"
-								]
-							}
-						},
-						{
-							"listen": "test",
-							"script": {
-								"type": "text/javascript",
-								"exec": [
-									"pm.test('Самоподписка должна вернуть 409 Conflict', function () {",
-									"    pm.response.to.have.status(409);",
-									"    pm.response.to.be.withBody;",
-									"    pm.response.to.be.json;",
-									"});",
-									"",
-									"pm.test('Ошибка содержит статус CONFLICT', function () {",
-									"    const body = pm.response.json();",
-									"    pm.expect(body.status).to.eql('CONFLICT');",
-									"});"
-								]
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/users/:userId/subscriptions/:publisherId",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"users",
-								":userId",
-								"subscriptions",
-								":publisherId"
-							],
-							"variable": [
-								{
-									"key": "userId",
-									"value": "{{subscriberId}}"
-								},
-								{
-									"key": "publisherId",
-									"value": "{{publisherId}}"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Подписка на несуществующего пользователя",
-					"event": [
-						{
-							"listen": "prerequest",
-							"script": {
-								"type": "text/javascript",
-								"exec": [
-									"const main = async () => {",
-									"    const api = new API(pm);",
-									"    const rnd = new RandomUtils();",
-									"    const subscriber = await api.addUser(rnd.getUser());",
-									"    pm.collectionVariables.set('subscriberId', subscriber.id);",
-									"    pm.collectionVariables.set('publisherId', 999999999);",
-									"};",
-									"",
-									"const interval = setInterval(() => {}, 1000);",
-									"setTimeout(async () => {",
-									"    try {",
-									"        await main();",
-									"    } catch (err) {",
-									"        console.error('Ошибка при подготовке тестовых данных.', err);",
-									"    } finally {",
-									"        clearInterval(interval);",
-									"    }",
-									"}, 100);"
-								]
-							}
-						},
-						{
-							"listen": "test",
-							"script": {
-								"type": "text/javascript",
-								"exec": [
-									"pm.test('Подписка на несуществующего пользователя должна вернуть 404 Not Found', function () {",
-									"    pm.response.to.have.status(404);",
-									"    pm.response.to.be.withBody;",
-									"    pm.response.to.be.json;",
-									"});",
-									"",
-									"pm.test('Ошибка содержит статус NOT_FOUND', function () {",
-									"    const body = pm.response.json();",
-									"    pm.expect(body.status).to.eql('NOT_FOUND');",
-									"});"
-								]
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/users/:userId/subscriptions/:publisherId",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"users",
-								":userId",
-								"subscriptions",
-								":publisherId"
-							],
-							"variable": [
-								{
-									"key": "userId",
-									"value": "{{subscriberId}}"
-								},
-								{
-									"key": "publisherId",
-									"value": "{{publisherId}}"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Отписка от пользователя без существующей подписки",
-					"event": [
-						{
-							"listen": "prerequest",
-							"script": {
-								"type": "text/javascript",
-								"exec": [
-									"const main = async () => {",
-									"    const api = new API(pm);",
-									"    const rnd = new RandomUtils();",
-									"    const subscriber = await api.addUser(rnd.getUser());",
-									"    const publisher = await api.addUser(rnd.getUser());",
-									"    pm.collectionVariables.set('subscriberId', subscriber.id);",
-									"    pm.collectionVariables.set('publisherId', publisher.id);",
-									"};",
-									"",
-									"const interval = setInterval(() => {}, 1000);",
-									"setTimeout(async () => {",
-									"    try {",
-									"        await main();",
-									"    } catch (err) {",
-									"        console.error('Ошибка при подготовке тестовых данных.', err);",
-									"    } finally {",
-									"        clearInterval(interval);",
-									"    }",
-									"}, 100);"
-								]
-							}
-						},
-						{
-							"listen": "test",
-							"script": {
-								"type": "text/javascript",
-								"exec": [
-									"pm.test('Отписка без существующей подписки должна вернуть 404 Not Found', function () {",
-									"    pm.response.to.have.status(404);",
-									"    pm.response.to.be.withBody;",
-									"    pm.response.to.be.json;",
-									"});",
-									"",
-									"pm.test('Ошибка содержит статус NOT_FOUND', function () {",
-									"    const body = pm.response.json();",
-									"    pm.expect(body.status).to.eql('NOT_FOUND');",
-									"});"
-								]
-							}
-						}
-					],
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/users/:userId/subscriptions/:publisherId",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"users",
-								":userId",
-								"subscriptions",
-								":publisherId"
-							],
-							"variable": [
-								{
-									"key": "userId",
-									"value": "{{subscriberId}}"
-								},
-								{
-									"key": "publisherId",
-									"value": "{{publisherId}}"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Отписка пользователя",
-					"event": [
-						{
-							"listen": "prerequest",
-							"script": {
-								"type": "text/javascript",
-								"exec": [
-									"const main = async () => {",
-									"    const api = new API(pm);",
-									"    const rnd = new RandomUtils();",
-									"    const subscriber = await api.addUser(rnd.getUser());",
-									"    const publisher = await api.addUser(rnd.getUser());",
-									"    await api.subscribe(subscriber.id, publisher.id);",
-									"    pm.collectionVariables.set('subscriberId', subscriber.id);",
-									"    pm.collectionVariables.set('publisherId', publisher.id);",
-									"};",
-									"",
-									"const interval = setInterval(() => {}, 1000);",
-									"setTimeout(async () => {",
-									"    try {",
-									"        await main();",
-									"    } catch (err) {",
-									"        console.error('Ошибка при подготовке тестовых данных.', err);",
-									"    } finally {",
-									"        clearInterval(interval);",
-									"    }",
-									"}, 100);"
-								]
-							}
-						},
-						{
-							"listen": "test",
-							"script": {
-								"type": "text/javascript",
-								"exec": [
-									"pm.test('Отписка должна вернуть 204 No Content', function () {",
-									"    pm.response.to.have.status(204);",
-									"});",
-									"",
-									"pm.test('Тело ответа при отписке пустое', function () {",
-									"    pm.expect(pm.response.text()).to.be.oneOf(['', null]);",
-									"});"
-								]
-							}
-						}
-					],
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/users/:userId/subscriptions/:publisherId",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"users",
-								":userId",
-								"subscriptions",
-								":publisherId"
-							],
-							"variable": [
-								{
-									"key": "userId",
-									"value": "{{subscriberId}}"
-								},
-								{
-									"key": "publisherId",
-									"value": "{{publisherId}}"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Получение актуальных опубликованных событий по подписке",
-					"event": [
-						{
-							"listen": "prerequest",
-							"script": {
-								"type": "text/javascript",
-								"exec": [
-									"const main = async () => {",
-									"    const api = new API(pm);",
-									"    const rnd = new RandomUtils();",
-									"    const subscriber = await api.addUser(rnd.getUser());",
-									"    const publisherOne = await api.addUser(rnd.getUser());",
-									"    const publisherTwo = await api.addUser(rnd.getUser());",
-									"    const notSubscribedPublisher = await api.addUser(rnd.getUser());",
-									"    const category = await api.addCategory(rnd.getCategory());",
-									"",
-									"    const olderEvent = await api.addEvent(publisherOne.id, rnd.getEvent(category.id, 48));",
-									"    const newerEvent = await api.addEvent(publisherTwo.id, rnd.getEvent(category.id, 96));",
-									"    const notSubscribedEvent = await api.addEvent(notSubscribedPublisher.id, rnd.getEvent(category.id, 120));",
-									"    const pendingEvent = await api.addEvent(publisherOne.id, rnd.getEvent(category.id, 144));",
-									"",
-									"    await api.publishEvent(olderEvent.id);",
-									"    await api.publishEvent(newerEvent.id);",
-									"    await api.publishEvent(notSubscribedEvent.id);",
-									"    await api.subscribe(subscriber.id, publisherOne.id);",
-									"    await api.subscribe(subscriber.id, publisherTwo.id);",
-									"",
-									"    pm.collectionVariables.set('subscriberId', subscriber.id);",
-									"    pm.collectionVariables.set('olderEventId', olderEvent.id);",
-									"    pm.collectionVariables.set('newerEventId', newerEvent.id);",
-									"    pm.collectionVariables.set('notSubscribedEventId', notSubscribedEvent.id);",
-									"    pm.collectionVariables.set('pendingEventId', pendingEvent.id);",
-									"};",
-									"",
-									"const interval = setInterval(() => {}, 1000);",
-									"setTimeout(async () => {",
-									"    try {",
-									"        await main();",
-									"    } catch (err) {",
-									"        console.error('Ошибка при подготовке тестовых данных.', err);",
-									"    } finally {",
-									"        clearInterval(interval);",
-									"    }",
-									"}, 100);"
-								]
-							}
-						},
-						{
-							"listen": "test",
-							"script": {
-								"type": "text/javascript",
-								"exec": [
-									"pm.test('Лента подписок должна вернуть 200 OK и JSON-массив', function () {",
-									"    pm.response.to.be.ok;",
-									"    pm.response.to.be.withBody;",
-									"    pm.response.to.be.json;",
-									"    pm.expect(pm.response.json()).to.be.an('array');",
-									"});",
-									"",
-									"pm.test('Лента содержит только события подписанных пользователей', function () {",
-									"    const events = pm.response.json();",
-									"    const ids = events.map(event => event.id);",
-									"    pm.expect(ids).to.include(Number(pm.collectionVariables.get('olderEventId')));",
-									"    pm.expect(ids).to.include(Number(pm.collectionVariables.get('newerEventId')));",
-									"    pm.expect(ids).to.not.include(Number(pm.collectionVariables.get('notSubscribedEventId')));",
-									"});",
-									"",
-									"pm.test('Лента содержит только опубликованные события', function () {",
-									"    const ids = pm.response.json().map(event => event.id);",
-									"    pm.expect(ids).to.not.include(Number(pm.collectionVariables.get('pendingEventId')));",
-									"});",
-									"",
-									"pm.test('События отсортированы по eventDate по убыванию', function () {",
-									"    const events = pm.response.json();",
-									"    pm.expect(events.length).to.eql(2);",
-									"    pm.expect(events[0].id).to.eql(Number(pm.collectionVariables.get('newerEventId')));",
-									"    pm.expect(events[1].id).to.eql(Number(pm.collectionVariables.get('olderEventId')));",
-									"    pm.expect(events[0].eventDate > events[1].eventDate).to.be.true;",
-									"});"
-								]
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/users/:userId/subscriptions/events?from=0&size=10",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"users",
-								":userId",
-								"subscriptions",
-								"events"
-							],
-							"query": [
-								{
-									"key": "from",
-									"value": "0"
-								},
-								{
-									"key": "size",
-									"value": "10"
-								}
-							],
-							"variable": [
-								{
-									"key": "userId",
-									"value": "{{subscriberId}}"
-								}
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		}
-	],
-	"event": [
-		{
-			"listen": "prerequest",
-			"script": {
-				"type": "text/javascript",
-				"exec": [
-					"API = class {",
-					"    constructor(pm) {",
-					"        this.pm = pm;",
-					"        this.baseUrl = pm.collectionVariables.get('baseUrl');",
-					"    }",
-					"",
-					"    async addUser(user) {",
-					"        return this.post('/admin/users', user, 'Ошибка при создании пользователя');",
-					"    }",
-					"",
-					"    async addCategory(category) {",
-					"        return this.post('/admin/categories', category, 'Ошибка при создании категории');",
-					"    }",
-					"",
-					"    async addEvent(userId, event) {",
-					"        return this.post('/users/' + userId + '/events', event, 'Ошибка при создании события');",
-					"    }",
-					"",
-					"    async publishEvent(eventId) {",
-					"        return this.patch('/admin/events/' + eventId, {stateAction: 'PUBLISH_EVENT'}, 'Ошибка при публикации события');",
-					"    }",
-					"",
-					"    async subscribe(userId, publisherId) {",
-					"        return this.post('/users/' + userId + '/subscriptions/' + publisherId, null, 'Ошибка при создании подписки', true);",
-					"    }",
-					"",
-					"    async post(path, body, errorText, allowEmpty = false) {",
-					"        return this.sendRequest('POST', path, body, errorText, allowEmpty);",
-					"    }",
-					"",
-					"    async patch(path, body, errorText, allowEmpty = false) {",
-					"        return this.sendRequest('PATCH', path, body, errorText, allowEmpty);",
-					"    }",
-					"",
-					"    async sendRequest(method, path, body = null, errorText = 'Ошибка при выполнении запроса', allowEmpty = false) {",
-					"        return new Promise((resolve, reject) => {",
-					"            const request = {",
-					"                url: this.baseUrl + path,",
-					"                method: method,",
-					"                header: { 'Content-Type': 'application/json', 'Accept': 'application/json' }",
-					"            };",
-					"            if (body !== null) {",
-					"                request.body = { mode: 'raw', raw: JSON.stringify(body) };",
-					"            }",
-					"",
-					"            this.pm.sendRequest(request, (error, response) => {",
-					"                if (error || response.code >= 400) {",
-					"                    const details = error ? error : response.text();",
-					"                    reject(new Error(errorText + ': ' + details));",
-					"                    return;",
-					"                }",
-					"                if (response.text() === '') {",
-					"                    if (allowEmpty) {",
-					"                        resolve(null);",
-					"                        return;",
-					"                    }",
-					"                    reject(new Error(errorText + ': пустое тело ответа'));",
-					"                    return;",
-					"                }",
-					"                resolve(response.json());",
-					"            });",
-					"        });",
-					"    }",
-					"};",
-					"",
-					"RandomUtils = class {",
-					"    getUser() {",
-					"        return {",
-					"            name: pm.variables.replaceIn('{{$randomFullName}}'),",
-					"            email: Date.now() + '.' + Math.floor(Math.random() * 1000000) + '@example.com'",
-					"        };",
-					"    }",
-					"",
-					"    getCategory() {",
-					"        return {",
-					"            name: 'cat-' + Date.now() + '-' + Math.floor(Math.random() * 1000000)",
-					"        };",
-					"    }",
-					"",
-					"    getEvent(categoryId, hourShift = 48) {",
-					"        return {",
-					"            annotation: 'Annotation for subscription feature test with enough characters',",
-					"            category: categoryId,",
-					"            description: 'Description for subscription feature test with enough characters',",
-					"            eventDate: this.getFutureDateTime(hourShift),",
-					"            location: {",
-					"                lat: 55.75,",
-					"                lon: 37.62",
-					"            },",
-					"            paid: false,",
-					"            participantLimit: 10,",
-					"            requestModeration: true,",
-					"            title: 'Subscription feature event ' + Date.now() + '-' + Math.floor(Math.random() * 1000000)",
-					"        };",
-					"    }",
-					"",
-					"    getFutureDateTime(hourShift = 48) {",
-					"        const moment = require('moment');",
-					"        return moment().add(hourShift, 'hour').format('YYYY-MM-DD HH:mm:ss');",
-					"    }",
-					"};"
-				]
-			}
-		}
-	],
-	"variable": [
-		{
-			"key": "baseUrl",
-			"value": "http://localhost:8080",
-			"type": "string"
-		},
-		{
-			"key": "subscriberId",
-			"value": ""
-		},
-		{
-			"key": "publisherId",
-			"value": ""
-		},
-		{
-			"key": "olderEventId",
-			"value": ""
-		},
-		{
-			"key": "newerEventId",
-			"value": ""
-		},
-		{
-			"key": "notSubscribedEventId",
-			"value": ""
-		},
-		{
-			"key": "pendingEventId",
-			"value": ""
-		}
-	]
 }

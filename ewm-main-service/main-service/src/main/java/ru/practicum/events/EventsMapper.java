@@ -14,7 +14,7 @@ import static ru.practicum.common.Constance.FORMATTER;
 
 public class EventsMapper {
 
-    public static EventShortDto toShortEventDto(Event event, Long confirmedRequests, Long rating) {
+    public static EventShortDto toShortEventDto(Event event, Long confirmedRequests) {
         EventShortDto dto = new EventShortDto();
         dto.setId(event.getId());
         dto.setAnnotation(event.getAnnotation());
@@ -25,6 +25,12 @@ public class EventsMapper {
         dto.setPaid(event.getPaid());
         dto.setTitle(event.getTitle());
         dto.setViews(event.getViews());
+        return dto;
+    }
+
+    public static EventShortDto toShortEventDto(Event event, Long confirmedRequests, Long rating) {
+        EventShortDto dto = new EventShortDto();
+        toShortEventDto(event, confirmedRequests);
         dto.setRating(rating != null ? rating : 0L);
         return dto;
     }
