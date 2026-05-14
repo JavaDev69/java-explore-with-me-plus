@@ -1,10 +1,10 @@
 {
   "info": {
-    "_postman_id": "b8c6e099-0b4f-4bb4-a572-6b8555c53b5c",
+    "_postman_id": "c29787fd-a024-4883-825a-380b87e5407a",
     "name": "features",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "50904553",
-    "_collection_link": "https://go.postman.co/collection/50904553-b8c6e099-0b4f-4bb4-a572-6b8555c53b5c?source=collection_link"
+    "_collection_link": "https://go.postman.co/collection/50904553-c29787fd-a024-4883-825a-380b87e5407a?source=collection_link"
   },
   "item": [
     {
@@ -2266,11 +2266,11 @@
     },
     {
       "key": "subscriberId",
-      "value": ""
+      "value": "3"
     },
     {
       "key": "publisherId",
-      "value": ""
+      "value": "4"
     },
     {
       "key": "olderEventId",
@@ -2319,6 +2319,18 @@
     {
       "key": "testDataReady",
       "value": ""
+    },
+    {
+      "key": "initiatorId",
+      "value": "1"
+    },
+    {
+      "key": "categoryId",
+      "value": "1"
+    },
+    {
+      "key": "raterId",
+      "value": "2"
     }
   ]
 }
