@@ -51,7 +51,7 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public List<CommentDto> getCommentsByEventId(Long eventId, Integer from, Integer size) {
         PageRequest page = PageRequest.of(from / size, size);
-        return commentRepository.findByEvent_IdAndStatus(eventId, CommentStatus.APPROVED, page).stream()
+        return commentRepository.findByEventIdAndStatus(eventId, CommentStatus.APPROVED, page).stream()
                 .map(CommentMapper::toCommentDto)
                 .collect(Collectors.toList());
     }
