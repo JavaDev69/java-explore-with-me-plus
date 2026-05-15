@@ -2,6 +2,7 @@ package ru.practicum.events.service;
 
 import ru.practicum.error.exception.ForbiddenActionException;
 import ru.practicum.error.exception.NotFoundException;
+import ru.practicum.events.EventsSortType;
 import ru.practicum.events.dto.*;
 
 import java.time.LocalDateTime;
@@ -16,7 +17,7 @@ public interface EventsService {
             LocalDateTime rangeStart,
             LocalDateTime rangeEnd,
             Boolean onlyAvailable,
-            String sort,
+            EventsSortType sort,
             int from,
             int size
     );
