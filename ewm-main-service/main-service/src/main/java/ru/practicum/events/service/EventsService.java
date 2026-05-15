@@ -2,6 +2,7 @@ package ru.practicum.events.service;
 
 import ru.practicum.error.exception.ForbiddenActionException;
 import ru.practicum.error.exception.NotFoundException;
+import ru.practicum.events.EventsSortType;
 import ru.practicum.events.dto.*;
 
 import java.time.LocalDateTime;
@@ -16,7 +17,7 @@ public interface EventsService {
             LocalDateTime rangeStart,
             LocalDateTime rangeEnd,
             Boolean onlyAvailable,
-            boolean sortByViews,
+            EventsSortType sort,
             int from,
             int size
     );
@@ -39,7 +40,7 @@ public interface EventsService {
      * Сохраняет новое событие, инициированное пользователем.
      *
      * @param newEventDto DTO с данными нового события
-     * @param userId ID пользователя, создающего событие
+     * @param userId      ID пользователя, создающего событие
      * @return DTO полного представления сохранённого события
      */
     EventFullDto saveEvent(NewEventDto newEventDto, Long userId);
@@ -48,17 +49,20 @@ public interface EventsService {
     /**
      * Обновляет данные события, если оно находится в состоянии «отменено» или «ожидает модерации».
      *
-     * @param userId ID пользователя, инициирующего обновление
-     * @param eventId ID события, которое требуется обновить
+     * @param userId                 ID пользователя, инициирующего обновление
+     * @param eventId                ID события, которое требуется обновить
      * @param updateEventUserRequest DTO с данными для обновления события (поля могут быть null)
      * @return DTO полного представления обновлённого события
-     * @throws NotFoundException если событие с указанным ID не найдено
+     * @throws NotFoundException        если событие с указанным ID не найдено
      * @throws ForbiddenActionException если обновление запрещено (неверный статус или дата слишком ранняя)
      */
     EventFullDto updateInactiveEvent(Long userId, Long eventId, UpdateEventUserRequest updateEventUserRequest);
 
     List<EventFullDto> getUserEvents(Long userId, int from, int size);
 
+    List<EventFullDto> getUserModerationHistory(Long userId, int from, int size);
+
     EventFullDto getUserEventById(Long userId, Long eventId);
 
+    List<EventFullDto> getEventsForModeration(int from, int size);
 }

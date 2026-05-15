@@ -26,7 +26,7 @@ public class PrivateEventController {
     @ResponseStatus(HttpStatus.CREATED)
     public EventFullDto addEvent(
             @Valid @RequestBody NewEventDto newEventDto,
-                @PathVariable @Positive Long userId) {
+            @PathVariable @Positive Long userId) {
 
         log.info("Получен запрос на создание нового события для пользователя с ID: {}. Заголовок события: '{}'", userId, newEventDto.getTitle());
         log.debug("Полные данные события, полученные от клиента: {}", newEventDto);
@@ -72,6 +72,17 @@ public class PrivateEventController {
         return userEvents;
     }
 
+    @GetMapping("/moderation")
+    @ResponseStatus(HttpStatus.OK)
+    public List<EventFullDto> getUserModerationHistory(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "0") Integer from,
+            @RequestParam(defaultValue = "10") Integer size
+    ) {
+        List<EventFullDto> events = eventsService.getUserModerationHistory(userId, from, size);
+        return events;
+    }
+
     @GetMapping("/{eventId}")
     @ResponseStatus(HttpStatus.OK)
     public EventFullDto getUserEventById(
@@ -88,4 +99,6 @@ public class PrivateEventController {
 
         return event;
     }
+
+
 }

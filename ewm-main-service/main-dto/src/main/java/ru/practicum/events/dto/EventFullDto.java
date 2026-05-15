@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.practicum.categories.CategoryDto;
 import ru.practicum.events.Location;
+import ru.practicum.events.dto.moderation.ModerationCommentShortDto;
 import ru.practicum.user.UserShortDto;
 
 @NoArgsConstructor
@@ -29,4 +30,6 @@ public class EventFullDto {
     private String state;
     private String title;
     private Long views;
+    private Long rating;
+    private ModerationCommentShortDto lastModerationCommentDto;
 }

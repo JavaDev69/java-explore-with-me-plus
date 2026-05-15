@@ -12,6 +12,7 @@ import ru.practicum.error.exception.NotFoundException;
 import ru.practicum.events.Event;
 import ru.practicum.events.EventState;
 import ru.practicum.events.EventsRepository;
+import ru.practicum.rating.RateRepository;
 import ru.practicum.requests.RequestRepository;
 
 import java.time.LocalDateTime;
@@ -30,6 +31,7 @@ public class CompilationServiceImpl implements CompilationService {
     private final CompilationRepository compilationRepository;
     private final EventsRepository eventsRepository;
     private final RequestRepository requestRepository;
+    private final RateRepository rateRepository;
     private final StatsClient statsClient;
 
     /**
@@ -168,10 +170,21 @@ public class CompilationServiceImpl implements CompilationService {
 
         Map<Long, Long> confirmedRequests = getConfirmedRequestsMap(allEvents);
         Map<Long, Long> views = getViewsMap(allEvents);
+        Map<Long, Long> ratings = getRatingsMap(allEvents);
 
         return compilations.stream()
-                .map(comp -> CompilationMapper.toCompilationDto(comp, confirmedRequests, views))
+                .map(comp -> CompilationMapper.toCompilationDto(comp, confirmedRequests, views, ratings))
                 .collect(Collectors.toList());
+    }
+
+    private Map<Long, Long> getRatingsMap(List<Event> events) {
+        if (events.isEmpty()) return Map.of();
+        List<Long> eventIds = events.stream().map(Event::getId).collect(Collectors.toList());
+        List<Object[]> results = rateRepository.getRatingsForEvents(eventIds);
+        return results.stream().collect(Collectors.toMap(
+                row -> ((Number) row[0]).longValue(),
+                row -> ((Number) row[1]).longValue()
+        ));
     }
 
     /**

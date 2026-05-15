@@ -54,6 +54,37 @@ public interface EventsRepository extends JpaRepository<Event, Long>, JpaSpecifi
             @Param("offset") int offset,
             @Param("size") int size);
 
-    Optional<Event> findById(Long id);
-}
+    @Query("SELECT e FROM Event e " +
+            "WHERE e.state = :state " +
+            "AND e.eventDate > :now " +
+            "AND e.initiator.id IN (" +
+            "    SELECT s.publisher.id FROM Subscription s WHERE s.subscriber.id = :subscriberId" +
+            ") " +
+            "ORDER BY e.eventDate DESC")
+    List<Event> findActualPublishedEventsBySubscriberId(
+            @Param("subscriberId") Long subscriberId,
+            @Param("state") EventState state,
+            @Param("now") LocalDateTime now,
+            Pageable pageable);
 
+    Optional<Event> findById(Long id);
+
+    @Query("SELECT e FROM Event e WHERE e.requestModeration = :requestModeration AND e.state = :state")
+    List<Event> findByRequestModerationAndState(
+            @Param("requestModeration") Boolean requestModeration,
+            @Param("state") EventState state,
+            Pageable pageable
+    );
+
+    @Query("SELECT e " +
+            "FROM Event e " +
+            "WHERE e.initiator.id = :userId " +
+            "AND (e.state = 'CANCELED' OR e.state = 'REJECTED') " +
+            "AND e.requestModeration = false " +
+            "ORDER BY e.eventDate DESC")
+    List<Event> findUserModerationHistory(
+            @Param("userId") Long userId,
+            Pageable pageable
+    );
+
+}

@@ -4,6 +4,7 @@ import ru.practicum.categories.Category;
 import ru.practicum.events.dto.EventFullDto;
 import ru.practicum.events.dto.EventShortDto;
 import ru.practicum.events.dto.NewEventDto;
+import ru.practicum.events.moderation.ModerationComment;
 import ru.practicum.user.User;
 import ru.practicum.user.UserMapper;
 
@@ -11,6 +12,7 @@ import java.time.LocalDateTime;
 
 import static ru.practicum.categories.CategoryMapper.toCategoryDto;
 import static ru.practicum.common.Constance.FORMATTER;
+import static ru.practicum.events.moderation.ModerationMapper.moderationCommentShortDto;
 
 public class EventsMapper {
 
@@ -25,6 +27,18 @@ public class EventsMapper {
         dto.setPaid(event.getPaid());
         dto.setTitle(event.getTitle());
         dto.setViews(event.getViews());
+        return dto;
+    }
+
+    public static EventShortDto toShortEventDto(Event event, Long confirmedRequests, Long rating) {
+        EventShortDto dto = toShortEventDto(event, confirmedRequests);
+        dto.setRating(rating != null ? rating : 0L);
+        return dto;
+    }
+
+    public static EventFullDto toEventFullDto(Event event, Long rating) {
+        EventFullDto dto = toEventFullDto(event);
+        dto.setRating(rating != null ? rating : 0L);
         return dto;
     }
 
@@ -46,6 +60,23 @@ public class EventsMapper {
         dto.setState(event.getState().name());
         dto.setTitle(event.getTitle());
         dto.setViews(event.getViews());
+        return dto;
+    }
+
+    public static EventFullDto toEventFullDto(Event event, ModerationComment mc, Long rating) {
+        EventFullDto dto = toEventFullDto(event);
+        dto.setRating(rating != null ? rating : 0L);
+        if (mc != null) {
+            dto.setLastModerationCommentDto(moderationCommentShortDto(mc));
+        }
+        return dto;
+    }
+
+    public static EventFullDto toEventFullDto(Event event, ModerationComment mc) {
+        EventFullDto dto = toEventFullDto(event);
+        if (mc != null) {
+            dto.setLastModerationCommentDto(moderationCommentShortDto(mc));
+        }
         return dto;
     }
 

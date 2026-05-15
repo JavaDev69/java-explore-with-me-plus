@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.StatsClient;
 import ru.practicum.dto.EndpointHit;
+import ru.practicum.events.EventsSortType;
 import ru.practicum.events.dto.EventFullDto;
 import ru.practicum.events.dto.EventShortDto;
 import ru.practicum.events.service.EventsService;
@@ -45,7 +46,7 @@ public class PublicEventsController {
             @RequestParam(defaultValue = "false") Boolean onlyAvailable,
 
             @RequestParam(defaultValue = "EVENT_DATE")
-            @Pattern(regexp = "EVENT_DATE|VIEWS", message = "Sort must be either 'EVENT_DATE' or 'VIEWS'")
+            @Pattern(regexp = "EVENT_DATE|VIEWS|RATING", message = "Sort must be either 'EVENT_DATE', 'VIEWS' or 'RATING'")
             String sort,
 
             @RequestParam(defaultValue = "0")
@@ -69,7 +70,7 @@ public class PublicEventsController {
 
         List<EventShortDto> events = eventService.getPublishedEvents(
                 text, categories, paid, rangeStart, rangeEnd, onlyAvailable,
-                sort.equals("VIEWS"), from, size
+                EventsSortType.valueOf(sort), from, size
         );
 
         return ResponseEntity.ok(events);
