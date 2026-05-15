@@ -69,7 +69,7 @@ public class EventsServiceImpl implements EventsService {
     public List<EventShortDto> getPublishedEvents(
             String text, List<Long> categoryIds, Boolean paid,
             LocalDateTime rangeStart, LocalDateTime rangeEnd,
-            Boolean onlyAvailable, String sort, int from, int size) {
+            Boolean onlyAvailable, EventsSortType sort, int from, int size) {
 
         Pageable pageable = PageRequest.of(from / size, size);
         if (rangeStart == null) rangeStart = LocalDateTime.now();
@@ -94,9 +94,9 @@ public class EventsServiceImpl implements EventsService {
                 .map(event -> toShortEventDto(event, requestCounts.getOrDefault(event.getId(), 0L), ratingsMap.getOrDefault(event.getId(), 0L)))
                 .collect(Collectors.toList());
 
-        if ("VIEWS".equals(sort)) {
+        if (sort == EventsSortType.VIEWS) {
             dtoList.sort((e1, e2) -> Long.compare(e2.getViews(), e1.getViews()));
-        } else if ("RATING".equals(sort)) {
+        } else if (sort == EventsSortType.RATING) {
             dtoList.sort((e1, e2) -> Long.compare(e2.getRating(), e1.getRating()));
         }
 
